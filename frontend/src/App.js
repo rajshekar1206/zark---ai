@@ -297,14 +297,6 @@ function App() {
                 </div>
               </div>
               <div className="header-actions">
-                <button 
-                  onClick={() => setShowSources(!showSources)} 
-                  className={`sources-toggle ${showSources ? 'active' : ''}`}
-                  title={showSources ? "Hide sources" : "Show sources"}
-                >
-                  <span>{showSources ? '🔗' : '🚫'}</span>
-                  {showSources ? 'Sources On' : 'Sources Off'}
-                </button>
                 <button onClick={getHelpInfo} className="help-button">
                   <span>❓</span>
                   Help
