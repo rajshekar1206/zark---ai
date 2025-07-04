@@ -169,11 +169,14 @@ async def get_detailed_status():
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat_query(request: QueryRequest):
     try:
+        print(f"Chat request: query='{request.query}', show_sources={request.show_sources}")
+        
         # Generate conversation ID if not provided
         conversation_id = request.conversation_id or str(uuid.uuid4())
         
         # Search knowledge base
         relevant_knowledge = await search_knowledge(request.query)
+        print(f"Found {len(relevant_knowledge)} relevant knowledge entries")
         
         # Prepare context for AI response
         context = prepare_context(relevant_knowledge, request.query)
@@ -181,18 +184,26 @@ async def chat_query(request: QueryRequest):
         # Generate response using Groq
         response = await generate_ai_response(context, request.query, request.show_sources)
         
+        # Extract sources from relevant knowledge
+        sources = []
+        if request.show_sources and relevant_knowledge:
+            for k in relevant_knowledge:
+                url = k.get("url", "")
+                title = k.get("title", "Unknown Source")
+                if url:
+                    sources.append(f"{title}: {url}")
+        
+        print(f"Returning {len(sources)} sources")
+        
         # Store conversation
         conversation_entry = {
             "id": conversation_id,
             "query": request.query,
             "response": response,
-            "sources": [k.get("url", "") for k in relevant_knowledge] if request.show_sources else [],
+            "sources": sources,
             "timestamp": datetime.utcnow()
         }
         conversations_collection.insert_one(conversation_entry)
-        
-        # Only return sources if explicitly requested
-        sources = [k.get("url", "") for k in relevant_knowledge] if request.show_sources else []
         
         return ChatResponse(
             response=response,
@@ -200,6 +211,7 @@ async def chat_query(request: QueryRequest):
             conversation_id=conversation_id
         )
     except Exception as e:
+        print(f"Chat error: {e}")
         raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
 
 @app.post("/api/ingest")
