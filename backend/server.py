@@ -11,10 +11,9 @@ import uuid
 from bs4 import BeautifulSoup
 import re
 import json
-import google.generativeai as genai
+from groq import Groq
 from urllib.parse import urljoin, urlparse
 from dotenv import load_dotenv
-from groq import Groq
 
 # Load environment variables
 load_dotenv()
