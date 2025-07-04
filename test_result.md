@@ -169,7 +169,9 @@ metadata:
 test_plan:
   current_focus:
     - "All UI and functionality improvements completed"
-  stuck_tasks: []
+    - "Fix Sources functionality"
+  stuck_tasks: 
+    - "Fix Sources functionality"
   test_all: false
   test_priority: "completed"
 
