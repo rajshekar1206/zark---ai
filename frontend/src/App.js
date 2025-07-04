@@ -122,7 +122,7 @@ function App() {
         body: JSON.stringify({
           query: currentMessage,
           conversation_id: conversationId,
-          show_sources: showSources || wantsSource
+          show_sources: wantsSource  // Only show sources if explicitly requested in the query
         })
       });
 
