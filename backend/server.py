@@ -14,6 +14,7 @@ import json
 import google.generativeai as genai
 from urllib.parse import urljoin, urlparse
 from dotenv import load_dotenv
+from groq import Groq
 
 # Load environment variables
 load_dotenv()
