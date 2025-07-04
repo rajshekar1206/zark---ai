@@ -356,7 +356,7 @@ function App() {
             <div className="manage-card">
               <div className="card-header">
                 <h3>📊 Knowledge Base</h3>
-                <p>Manage Zark's knowledge database</p>
+                <p>Manage your knowledge database</p>
               </div>
               <div className="knowledge-stats">
                 <div className="stat-card">
