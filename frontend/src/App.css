@@ -579,7 +579,7 @@ body {
 .avatar-circle {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #1e3c72, #2a5298);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -589,6 +589,7 @@ body {
   font-size: 20px;
   box-shadow: 0 4px 12px rgba(30, 60, 114, 0.4);
   animation: glow 2s ease-in-out infinite alternate;
+  border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 @keyframes glow {
