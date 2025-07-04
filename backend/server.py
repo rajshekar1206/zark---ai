@@ -315,12 +315,13 @@ async def ingest_from_url(url: str, depth: int = 1) -> int:
                 content = re.sub(r'\s+', ' ', content).strip()
                 
                 if len(content) > 100:  # Only store meaningful content
-                    # Generate summary using Gemini
-                    summary = await generate_summary(content[:1000])
+                    # Generate enhanced summary
+                    summary = await generate_enhanced_summary(content[:1000], title_text)
                     
-                    # Extract entities and tags
-                    entities = extract_entities(content)
-                    tags = extract_tags(title_text, content)
+                    # Extract enhanced entities and tags
+                    entities = extract_enhanced_entities(content)
+                    tags = extract_enhanced_tags(title_text, content)
+                    keywords = extract_keywords(title_text, content)
                     
                     # Store in knowledge base
                     knowledge_entry = {
