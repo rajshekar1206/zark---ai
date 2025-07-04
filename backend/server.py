@@ -68,19 +68,88 @@ class KnowledgeEntry(BaseModel):
 async def root():
     return {"message": "Zark AI Knowledge Assistant API is running"}
 
-@app.get("/api/health")
-async def health_check():
+@app.get("/api/help")
+async def get_help():
+    """Get help information about how Zark-AI works"""
     try:
-        # Check MongoDB connection
-        db.command('ping')
+        total_entries = knowledge_collection.count_documents({})
+        api_status = "configured" if GROQ_API_KEY else "not_configured"
         
-        # Check Groq API
-        if not GROQ_API_KEY:
-            return {"status": "error", "message": "Groq API key not configured"}
-        
-        return {"status": "healthy", "mongodb": "connected", "groq": "configured"}
+        return {
+            "bot_name": "Zark-AI",
+            "version": "2.0",
+            "api_status": api_status,
+            "knowledge_entries": total_entries,
+            "capabilities": {
+                "online_mode": {
+                    "description": "Full AI capabilities with Groq API",
+                    "features": [
+                        "Advanced natural language understanding",
+                        "Contextual responses based on website content",
+                        "Intelligent content analysis",
+                        "Complex question answering",
+                        "Website content ingestion and understanding"
+                    ],
+                    "enabled": bool(GROQ_API_KEY)
+                },
+                "offline_mode": {
+                    "description": "Limited functionality without API",
+                    "features": [
+                        "Basic responses only",
+                        "Simple pattern matching",
+                        "Limited content understanding"
+                    ],
+                    "enabled": not bool(GROQ_API_KEY)
+                }
+            },
+            "how_to_use": {
+                "add_content": "Go to 'Manage' tab and paste any website URL to add it to my knowledge base",
+                "ask_questions": "Ask me anything about the content you've added or general questions",
+                "best_practices": [
+                    "Add relevant websites before asking specific questions",
+                    "Ask specific questions about the content",
+                    "Use 'New Chat' to start fresh conversations"
+                ]
+            },
+            "setup_instructions": {
+                "for_online_mode": [
+                    "Get a Groq API key from https://groq.com/",
+                    "Add GROQ_API_KEY to your environment variables",
+                    "Restart the backend service",
+                    "Bot status will show 'Online' when properly configured"
+                ]
+            }
+        }
     except Exception as e:
-        return {"status": "error", "message": str(e)}
+        raise HTTPException(status_code=500, detail=f"Error getting help: {str(e)}")
+
+@app.get("/api/status")
+async def get_detailed_status():
+    """Get detailed status information"""
+    try:
+        total_entries = knowledge_collection.count_documents({})
+        recent_entries = list(knowledge_collection.find(
+            {}, 
+            {"title": 1, "url": 1, "ingested_at": 1, "_id": 0}
+        ).sort("ingested_at", -1).limit(5))
+        
+        return {
+            "status": "healthy" if GROQ_API_KEY else "limited",
+            "api_configured": bool(GROQ_API_KEY),
+            "mongodb_connected": True,
+            "knowledge_base": {
+                "total_entries": total_entries,
+                "recent_entries": recent_entries
+            },
+            "capabilities": "full" if GROQ_API_KEY else "limited"
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "api_configured": bool(GROQ_API_KEY),
+            "mongodb_connected": False
+        }
 
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat_query(request: QueryRequest):
