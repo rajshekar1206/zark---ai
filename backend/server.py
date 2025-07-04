@@ -163,52 +163,83 @@ async def clear_knowledge():
         raise HTTPException(status_code=500, detail=f"Error clearing knowledge: {str(e)}")
 
 async def search_knowledge(query: str, limit: int = 5) -> List[Dict]:
-    """Search knowledge base using text search and relevance scoring"""
+    """Enhanced search knowledge base using multiple search strategies"""
     try:
         # Get total count first
         total_count = knowledge_collection.count_documents({})
         print(f"Total knowledge entries: {total_count}")
         
         # Split query into words for better matching
-        query_words = query.lower().split()
+        query_words = [word.lower() for word in query.split() if len(word) > 2]
         
-        # Create search conditions
+        # Create multiple search strategies
         search_conditions = []
         
-        # Add regex search for each word
-        for word in query_words:
-            if len(word) > 2:  # Only search for words longer than 2 characters
-                search_conditions.extend([
-                    {"title": {"$regex": word, "$options": "i"}},
-                    {"content": {"$regex": word, "$options": "i"}},
-                    {"summary": {"$regex": word, "$options": "i"}},
-                    {"tags": {"$in": [word]}}
-                ])
-        
-        # Add original query search
+        # Strategy 1: Exact phrase search
         search_conditions.extend([
             {"title": {"$regex": query, "$options": "i"}},
             {"content": {"$regex": query, "$options": "i"}},
-            {"summary": {"$regex": query, "$options": "i"}},
-            {"tags": {"$in": [query.lower()]}}
+            {"summary": {"$regex": query, "$options": "i"}}
         ])
         
-        # If no specific matches, return recent entries
-        if not search_conditions:
-            search_results = knowledge_collection.find(
-                {},
-                {"_id": 0}
-            ).sort("ingested_at", -1).limit(limit)
-        else:
+        # Strategy 2: Individual word search with higher priority on title/summary
+        for word in query_words:
+            search_conditions.extend([
+                {"title": {"$regex": word, "$options": "i"}},
+                {"summary": {"$regex": word, "$options": "i"}},
+                {"keywords": {"$in": [word]}},
+                {"tags": {"$in": [word]}},
+                {"entities": {"$in": [word.title()]}},
+                {"content": {"$regex": word, "$options": "i"}}
+            ])
+        
+        # Strategy 3: Domain-specific search
+        if "what is" in query.lower() or "tell me about" in query.lower():
+            # Extract the main topic
+            topic_match = re.search(r'(?:what is|tell me about|explain)\s+(.+?)(?:\?|$)', query.lower())
+            if topic_match:
+                topic = topic_match.group(1).strip()
+                search_conditions.extend([
+                    {"title": {"$regex": topic, "$options": "i"}},
+                    {"tags": {"$in": [topic]}},
+                    {"keywords": {"$in": [topic]}}
+                ])
+        
+        # Perform search with different strategies
+        results = []
+        
+        if search_conditions:
+            # Primary search
             search_results = knowledge_collection.find(
                 {"$or": search_conditions},
                 {"_id": 0}
-            ).limit(limit)
+            ).sort("ingested_at", -1).limit(limit)
+            results = list(search_results)
         
-        results = list(search_results)
-        print(f"Search for '{query}' returned {len(results)} results")
+        print(f"Primary search for '{query}' returned {len(results)} results")
         
-        # If no results from query, return some recent entries
+        # If no results, try fallback searches
+        if not results and total_count > 0:
+            print("No primary matches found, trying fallback searches...")
+            
+            # Fallback 1: Partial word matching
+            fallback_conditions = []
+            for word in query_words:
+                if len(word) > 3:
+                    fallback_conditions.extend([
+                        {"title": {"$regex": f".*{word}.*", "$options": "i"}},
+                        {"content": {"$regex": f".*{word}.*", "$options": "i"}}
+                    ])
+            
+            if fallback_conditions:
+                search_results = knowledge_collection.find(
+                    {"$or": fallback_conditions},
+                    {"_id": 0}
+                ).limit(limit)
+                results = list(search_results)
+                print(f"Fallback search returned {len(results)} results")
+        
+        # If still no results, return recent entries
         if not results and total_count > 0:
             print("No specific matches found, returning recent entries")
             search_results = knowledge_collection.find(
