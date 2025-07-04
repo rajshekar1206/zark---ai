@@ -76,11 +76,11 @@ async def health_check():
         # Check MongoDB connection
         db.command('ping')
         
-        # Check Gemini API
-        if not GEMINI_API_KEY:
-            return {"status": "error", "message": "Gemini API key not configured"}
+        # Check Groq API
+        if not GROQ_API_KEY:
+            return {"status": "error", "message": "Groq API key not configured"}
         
-        return {"status": "healthy", "mongodb": "connected", "gemini": "configured"}
+        return {"status": "healthy", "mongodb": "connected", "groq": "configured"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
