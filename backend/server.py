@@ -68,6 +68,20 @@ class KnowledgeEntry(BaseModel):
 async def root():
     return {"message": "Zark AI Knowledge Assistant API is running"}
 
+@app.get("/api/health")
+async def health_check():
+    try:
+        # Check MongoDB connection
+        db.command('ping')
+        
+        # Check Groq API
+        if not GROQ_API_KEY:
+            return {"status": "error", "message": "Groq API key not configured"}
+        
+        return {"status": "healthy", "mongodb": "connected", "groq": "configured"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 @app.get("/api/help")
 async def get_help():
     """Get help information about how Zark-AI works"""
