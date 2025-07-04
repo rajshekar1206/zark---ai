@@ -422,7 +422,7 @@ async def generate_ai_response(context: str, query: str, show_sources: bool = Fa
         
         # Check if user is asking for sources
         wants_sources = show_sources or any(phrase in query.lower() for phrase in [
-            "source", "sources", "where did you get", "reference", "link", "url", "website"
+            "source", "sources", "where did you get", "reference", "link", "url", "website", "citation", "cite"
         ])
         
         # Check if user is asking for more details
@@ -461,26 +461,26 @@ Instructions:
 
 {context}
 
-The user is asking for detailed information and wants to know about sources. Provide a comprehensive, accurate response using the provided context. Include references to the specific sources when relevant, and make sure to acknowledge where the information comes from."""
+The user is asking for detailed information and wants to know about sources. Provide a comprehensive, accurate response using the provided context. When you have information from the knowledge database, mention where it came from naturally in your response."""
             else:
                 prompt = f"""{system_prompt}
 
 {context}
 
-The user wants to know about sources. Provide a clear, informative response using the provided context. Reference the sources naturally in your response when relevant."""
+The user wants to know about sources. Provide a clear, informative response using the provided context. When you reference information from the knowledge database, acknowledge where it came from."""
         else:
             if is_detailed_request:
                 prompt = f"""{system_prompt}
 
 {context}
 
-The user is asking for detailed information. Provide a comprehensive, accurate response using the provided context. Focus on being thorough and informative without mentioning sources unless specifically relevant to the answer."""
+The user is asking for detailed information. Provide a comprehensive, accurate response using the provided context. Focus on being thorough and informative."""
             else:
                 prompt = f"""{system_prompt}
 
 {context}
 
-Provide a clear, helpful, and engaging response. Use the provided context when relevant, but focus on being conversational and informative. Don't mention sources unless they're specifically relevant to answering the question."""
+Provide a clear, helpful, and engaging response. Use the provided context when relevant, but focus on being conversational and informative."""
 
         response = groq_client.chat.completions.create(
             messages=[
