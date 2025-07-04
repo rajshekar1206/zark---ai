@@ -44,6 +44,8 @@ GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
     model = genai.GenerativeModel('gemini-1.5-flash')
+if GROQ_API_KEY:
+    groq_client = Groq(api_key=GROQ_API_KEY)
 
 # Pydantic models
 class QueryRequest(BaseModel):
