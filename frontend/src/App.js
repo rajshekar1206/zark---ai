@@ -186,7 +186,7 @@ function App() {
             onClick={() => setActiveTab('manage')}
           >
             <span className="tab-icon">⚙️</span>
-            <span>Manage Knowledge</span>
+            <span>Manage</span>
           </button>
         </div>
 
