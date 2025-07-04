@@ -378,7 +378,7 @@ body {
 .bot-avatar-small {
   width: 36px;
   height: 36px;
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  background: linear-gradient(135deg, #667eea, #764ba2);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -386,6 +386,7 @@ body {
   color: white;
   font-weight: bold;
   font-size: 16px;
+  animation: pulse 2s infinite;
 }
 
 .message-content {
