@@ -313,8 +313,8 @@ function App() {
           <div className="manage-section">
             <div className="manage-card">
               <div className="card-header">
-                <h3>🌐 Insert Web Content</h3>
-                <p>Add knowledge from websites to expand Zark's capabilities</p>
+                <h3>🌐 Add Content</h3>
+                <p>Expand Zark's knowledge from web sources</p>
               </div>
               <div className="insert-form">
                 <input
@@ -333,12 +333,12 @@ function App() {
                   {isInserting ? (
                     <>
                       <span className="loading-spinner"></span>
-                      Inserting...
+                      Adding...
                     </>
                   ) : (
                     <>
                       <span>📥</span>
-                      Insert Content
+                      Add Content
                     </>
                   )}
                 </button>
@@ -346,9 +346,9 @@ function App() {
               <div className="insert-tips">
                 <p>💡 <strong>Tips:</strong></p>
                 <ul>
-                  <li>Try Wikipedia articles, news sites, or documentation</li>
-                  <li>Zark will analyze the content and extract key information</li>
-                  <li>Processing may take a few moments for large sites</li>
+                  <li>Use Wikipedia, news sites, or documentation</li>
+                  <li>Content is analyzed and processed automatically</li>
+                  <li>Processing may take a few moments</li>
                 </ul>
               </div>
             </div>
