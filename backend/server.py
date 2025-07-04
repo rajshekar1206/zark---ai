@@ -137,8 +137,20 @@ async def ingest_content(request: UrlIngestRequest):
 @app.get("/api/knowledge")
 async def get_knowledge():
     try:
-        knowledge = list(knowledge_collection.find({}, {"_id": 0}).limit(50))
-        return {"knowledge": knowledge, "total": len(knowledge)}
+        # Get total count
+        total_count = knowledge_collection.count_documents({})
+        
+        # Get recent entries with more details
+        knowledge = list(knowledge_collection.find(
+            {},
+            {"_id": 0, "content": 0}  # Exclude large content field for overview
+        ).sort("ingested_at", -1).limit(10))
+        
+        return {
+            "knowledge": knowledge,
+            "total": total_count,
+            "recent_count": len(knowledge)
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving knowledge: {str(e)}")
 
