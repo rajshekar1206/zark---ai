@@ -316,22 +316,25 @@ async def ingest_from_url(url: str, depth: int = 1) -> int:
                 
                 if len(content) > 100:  # Only store meaningful content
                     # Generate enhanced summary
-                    summary = await generate_enhanced_summary(content[:1000], title_text)
+                    summary = await generate_enhanced_summary(content[:2000], title_text)
                     
                     # Extract enhanced entities and tags
                     entities = extract_enhanced_entities(content)
                     tags = extract_enhanced_tags(title_text, content)
                     keywords = extract_keywords(title_text, content)
                     
-                    # Store in knowledge base
+                    # Store in knowledge base with enhanced metadata
                     knowledge_entry = {
                         "id": str(uuid.uuid4()),
                         "title": title_text,
-                        "content": content[:5000],  # Limit content size
+                        "content": content[:8000],  # Increased content size
                         "url": page_url,
                         "summary": summary,
                         "entities": entities,
                         "tags": tags,
+                        "keywords": keywords,
+                        "content_type": "webpage",
+                        "domain": urlparse(page_url).netloc,
                         "ingested_at": datetime.utcnow()
                     }
                     
