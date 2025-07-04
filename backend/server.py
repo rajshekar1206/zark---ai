@@ -202,16 +202,22 @@ async def search_knowledge(query: str, limit: int = 5) -> List[Dict]:
 
 def prepare_context(knowledge: List[Dict], query: str) -> str:
     """Prepare context from knowledge base for AI response"""
-    if not knowledge:
-        return f"Query: {query}\nNo relevant knowledge found in the database. Please provide a concise response in 5 lines or less based on your training data."
+    # Get total knowledge count
+    total_count = knowledge_collection.count_documents({})
     
-    context = f"Query: {query}\n\nRelevant Knowledge:\n"
+    if not knowledge:
+        if total_count > 0:
+            return f"Query: {query}\n\nI have access to {total_count} knowledge entries, but none directly match your query. Let me provide a response based on my training data and general knowledge."
+        else:
+            return f"Query: {query}\n\nNo knowledge entries found in the database. Please provide a concise response based on your training data."
+    
+    context = f"Query: {query}\n\nI have access to {total_count} total knowledge entries. Here are the most relevant ones:\n"
     for i, item in enumerate(knowledge, 1):
         context += f"\n{i}. Title: {item.get('title', 'Unknown')}\n"
         context += f"   Content: {item.get('content', '')[:500]}...\n"
         context += f"   Source: {item.get('url', 'Unknown')}\n"
     
-    context += "\nPlease provide a concise response in 5 lines or less based on the above knowledge and your training data. If the user asks for more details, then provide a comprehensive explanation."
+    context += "\nPlease provide a helpful response based on the above knowledge and your training data. Be informative and accurate."
     return context
 
 async def generate_ai_response(context: str, query: str) -> str:
