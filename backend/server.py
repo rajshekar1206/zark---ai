@@ -302,14 +302,22 @@ async def ingest_from_url(url: str, depth: int = 1) -> int:
     return ingested_count
 
 async def generate_summary(content: str) -> str:
-    """Generate summary using Gemini"""
+    """Generate summary using Groq"""
     try:
-        if not GEMINI_API_KEY:
+        if not GROQ_API_KEY:
             return content[:200] + "..."
         
-        prompt = f"Summarize the following content in 2-3 sentences:\n\n{content}"
-        response = model.generate_content(prompt)
-        return response.text
+        response = groq_client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": "You are a helpful AI assistant."},
+                {"role": "user", "content": f"Summarize the following content in 2-3 sentences:\n\n{content}"}
+            ],
+            model="llama3-70b-8192",
+            max_tokens=150,
+            temperature=0.3
+        )
+        
+        return response.choices[0].message.content
     except Exception as e:
         return content[:200] + "..."
 
