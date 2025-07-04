@@ -107,18 +107,23 @@ function App() {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentMessage = inputMessage;
     setInputMessage('');
     setIsLoading(true);
 
     try {
+      // Check if user is asking for sources
+      const wantsSource = /\b(source|sources|where did you get|reference|link|url|website)\b/i.test(currentMessage);
+      
       const response = await fetch(`${BACKEND_URL}/api/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          query: inputMessage,
-          conversation_id: conversationId
+          query: currentMessage,
+          conversation_id: conversationId,
+          show_sources: showSources || wantsSource
         })
       });
 
