@@ -13,6 +13,10 @@ import re
 import json
 import google.generativeai as genai
 from urllib.parse import urljoin, urlparse
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Initialize FastAPI app
 app = FastAPI(title="Universal Knowledge Bot API")
