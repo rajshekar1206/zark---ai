@@ -39,7 +39,6 @@ function App() {
   const [detailedStatus, setDetailedStatus] = useState(null);
   const [showHelp, setShowHelp] = useState(false);
   const [helpInfo, setHelpInfo] = useState(null);
-  const [showSources, setShowSources] = useState(false);
 
   const getHelpInfo = async () => {
     try {
