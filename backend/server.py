@@ -393,7 +393,7 @@ def prepare_context(knowledge: List[Dict], query: str) -> str:
     
     return context
 
-async def generate_ai_response(context: str, query: str) -> str:
+async def generate_ai_response(context: str, query: str, show_sources: bool = False) -> str:
     """Generate AI response using Groq with enhanced error handling"""
     try:
         if not GROQ_API_KEY:
@@ -420,28 +420,71 @@ async def generate_ai_response(context: str, query: str) -> str:
 
 **Current Query**: I cannot properly answer your question about: "{query}" in offline mode."""
         
+        # Check if user is asking for sources
+        wants_sources = show_sources or any(phrase in query.lower() for phrase in [
+            "source", "sources", "where did you get", "reference", "link", "url", "website"
+        ])
+        
         # Check if user is asking for more details
         is_detailed_request = any(phrase in query.lower() for phrase in [
             "more details", "more information", "explain further", "tell me more", 
             "elaborate", "expand", "comprehensive", "detailed", "in depth"
         ])
         
-        if is_detailed_request:
-            prompt = f"""You are Zark, an AI assistant with access to a knowledge database. Answer comprehensively using the provided context.
+        # Enhanced system prompt to make Zark more conversational and helpful
+        system_prompt = """You are Zark, a friendly and intelligent AI assistant. You have access to a comprehensive knowledge database and can answer questions on a wide variety of topics.
+
+Your personality:
+- Friendly, approachable, and helpful
+- Always eager to assist and provide valuable information
+- Enthusiastic about learning and sharing knowledge
+- Clear and concise in your responses
+- Able to understand context and provide relevant answers
+
+Your capabilities:
+- Answer questions on any topic with accuracy
+- Understand context and provide relevant information
+- Analyze and explain complex topics in simple terms
+- Help with research, explanations, and problem-solving
+- Provide comprehensive answers when requested
+
+Instructions:
+- Always be helpful and try to answer every question to the best of your ability
+- Use the provided context from your knowledge database when relevant
+- If you don't have specific information, use your general knowledge to provide a helpful response
+- Be conversational and engaging in your responses
+- Don't mention technical details about your knowledge database unless specifically asked"""
+
+        if wants_sources:
+            if is_detailed_request:
+                prompt = f"""{system_prompt}
 
 {context}
 
-Provide a detailed, accurate response. Reference specific information from the sources when relevant. If the user is asking about specific website content, make sure to directly address their question using the available information."""
+The user is asking for detailed information and wants to know about sources. Provide a comprehensive, accurate response using the provided context. Include references to the specific sources when relevant, and make sure to acknowledge where the information comes from."""
+            else:
+                prompt = f"""{system_prompt}
+
+{context}
+
+The user wants to know about sources. Provide a clear, informative response using the provided context. Reference the sources naturally in your response when relevant."""
         else:
-            prompt = f"""You are Zark, an AI assistant with access to a knowledge database. Answer helpfully using the provided context.
+            if is_detailed_request:
+                prompt = f"""{system_prompt}
 
 {context}
 
-Provide a clear, informative response. If you're using information from specific sources, acknowledge them naturally. Be accurate and helpful."""
+The user is asking for detailed information. Provide a comprehensive, accurate response using the provided context. Focus on being thorough and informative without mentioning sources unless specifically relevant to the answer."""
+            else:
+                prompt = f"""{system_prompt}
+
+{context}
+
+Provide a clear, helpful, and engaging response. Use the provided context when relevant, but focus on being conversational and informative. Don't mention sources unless they're specifically relevant to answering the question."""
 
         response = groq_client.chat.completions.create(
             messages=[
-                {"role": "system", "content": "You are Zark, a helpful AI assistant with access to a knowledge database. Always try to answer questions using the provided context when relevant."},
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": prompt}
             ],
             model="llama3-70b-8192",
