@@ -129,6 +129,42 @@ class ZarkAIAPITest(unittest.TestCase):
         data = response.json()
         print(f"✅ Knowledge Base now contains {data['total']} entries")
         
+    def test_08_error_handling(self):
+        """Test error handling with invalid requests"""
+        print("\n🔍 Testing Error Handling...")
+        
+        # Test invalid chat request (missing required field)
+        print("Testing invalid chat request...")
+        payload = {
+            # Missing required 'query' field
+            "conversation_id": "invalid-test"
+        }
+        response = requests.post(
+            f"{self.base_url}/api/chat", 
+            headers=self.headers,
+            json=payload
+        )
+        self.assertEqual(response.status_code, 422, "Should return 422 for invalid request")
+        data = response.json()
+        print(f"✅ Invalid chat request error: {data}")
+        self.assertIn('detail', data)
+        
+        # Test invalid ingest request
+        print("Testing invalid ingest request...")
+        payload = {
+            "url": "not-a-valid-url",
+            "depth": 1
+        }
+        response = requests.post(
+            f"{self.base_url}/api/ingest", 
+            headers=self.headers,
+            json=payload
+        )
+        self.assertIn(response.status_code, [422, 500], "Should return error for invalid URL")
+        data = response.json()
+        print(f"✅ Invalid ingest request error: {data}")
+        self.assertIn('detail', data)
+        
     def run_all_tests(self):
         """Run all tests in sequence"""
         try:
