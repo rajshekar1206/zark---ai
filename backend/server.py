@@ -175,25 +175,28 @@ async def chat_query(request: QueryRequest):
         # Search knowledge base
         relevant_knowledge = await search_knowledge(request.query)
         
-        # Prepare context for Gemini
+        # Prepare context for AI response
         context = prepare_context(relevant_knowledge, request.query)
         
         # Generate response using Groq
-        response = await generate_ai_response(context, request.query)
+        response = await generate_ai_response(context, request.query, request.show_sources)
         
         # Store conversation
         conversation_entry = {
             "id": conversation_id,
             "query": request.query,
             "response": response,
-            "sources": [k.get("url", "") for k in relevant_knowledge],
+            "sources": [k.get("url", "") for k in relevant_knowledge] if request.show_sources else [],
             "timestamp": datetime.utcnow()
         }
         conversations_collection.insert_one(conversation_entry)
         
+        # Only return sources if explicitly requested
+        sources = [k.get("url", "") for k in relevant_knowledge] if request.show_sources else []
+        
         return ChatResponse(
             response=response,
-            sources=[k.get("url", "") for k in relevant_knowledge],
+            sources=sources,
             conversation_id=conversation_id
         )
     except Exception as e:
