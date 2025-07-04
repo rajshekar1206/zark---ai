@@ -266,7 +266,7 @@ function App() {
             <div className="chat-header">
               <div className="bot-avatar">
                 <div className="avatar-circle">
-                  <span className="avatar-text">Z</span>
+                  <ZarkRobot size="medium" />
                 </div>
                 <div className="bot-info">
                   <h3 className="bot-name">Zark</h3>
