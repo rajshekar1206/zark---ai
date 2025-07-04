@@ -240,12 +240,17 @@ function App() {
                     {apiHealth?.status === 'healthy' ? (
                       <>
                         <span className="status-dot online"></span>
-                        Online • {knowledgeCount} entries
+                        🟢 Online • {knowledgeCount} entries • Full AI Mode
+                      </>
+                    ) : detailedStatus?.status === 'limited' ? (
+                      <>
+                        <span className="status-dot limited"></span>
+                        🟡 Limited Mode • {knowledgeCount} entries • No AI API
                       </>
                     ) : (
                       <>
                         <span className="status-dot offline"></span>
-                        Offline
+                        🔴 Offline • Connection Issues
                       </>
                     )}
                   </p>
