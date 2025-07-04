@@ -687,7 +687,7 @@ body {
 
 .insert-tips li:before {
   content: "•";
-  color: #3b82f6;
+  color: #667eea;
   font-weight: bold;
   position: absolute;
   left: 0;
