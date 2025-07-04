@@ -747,11 +747,15 @@ body {
   30% { transform: translateY(-12px); }
 }
 
-/* Chat Input */
+/* Chat Input - Make it sticky at bottom */
 .chat-input-container {
   padding: 20px;
-  background: rgba(248, 250, 252, 0.8);
+  background: rgba(248, 250, 252, 0.95);
   border-top: 1px solid rgba(59, 130, 246, 0.1);
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  backdrop-filter: blur(10px);
 }
 
 .chat-input {
