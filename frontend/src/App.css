@@ -156,15 +156,16 @@ body {
 }
 
 .tab.active {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
 }
 
 .tab:hover:not(.active) {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+  transform: translateY(-1px);
 }
 
 .tab-icon {
