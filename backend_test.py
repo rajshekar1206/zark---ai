@@ -340,8 +340,17 @@ class ZarkAIAPITest(unittest.TestCase):
             self.test_04_get_knowledge()
             self.test_05_chat_with_knowledge()
             self.test_06_detailed_response()
+            
+            # Run the new sources functionality tests
+            self.test_09_sources_functionality_off()
+            self.test_10_sources_functionality_on()
+            self.test_11_explicit_source_request()
+            self.test_12_specific_ai_questions()
+            
+            # Run these tests last as they modify the knowledge base
             self.test_07_clear_knowledge()
             self.test_08_error_handling()
+            
             print("\n✅ All API tests completed successfully!")
             return True
         except Exception as e:
