@@ -1,75 +1,315 @@
-from fastapi import FastAPI, APIRouter
-from dotenv import load_dotenv
-from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from pymongo import MongoClient
 import os
-import logging
-from pathlib import Path
-from pydantic import BaseModel, Field
-from typing import List
-import uuid
+from typing import List, Dict, Any, Optional
+import httpx
+import asyncio
 from datetime import datetime
+import uuid
+from bs4 import BeautifulSoup
+import re
+import json
+import google.generativeai as genai
+from urllib.parse import urljoin, urlparse
 
+# Initialize FastAPI app
+app = FastAPI(title="Universal Knowledge Bot API")
 
-ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env')
-
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
-
-# Create the main app without a prefix
-app = FastAPI()
-
-# Create a router with the /api prefix
-api_router = APIRouter(prefix="/api")
-
-
-# Define Models
-class StatusCheck(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
-
-class StatusCheckCreate(BaseModel):
-    client_name: str
-
-# Add your routes to the router instead of directly to app
-@api_router.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.dict()
-    status_obj = StatusCheck(**status_dict)
-    _ = await db.status_checks.insert_one(status_obj.dict())
-    return status_obj
-
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    status_checks = await db.status_checks.find().to_list(1000)
-    return [StatusCheck(**status_check) for status_check in status_checks]
-
-# Include the router in the main app
-app.include_router(api_router)
-
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_credentials=True,
     allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# Initialize MongoDB connection
+MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017/')
+client = MongoClient(MONGO_URL)
+db = client['knowledge_bot']
+knowledge_collection = db['knowledge']
+conversations_collection = db['conversations']
 
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()
+# Initialize Google Gemini
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    model = genai.GenerativeModel('gemini-pro')
+
+# Pydantic models
+class QueryRequest(BaseModel):
+    query: str
+    conversation_id: Optional[str] = None
+
+class UrlIngestRequest(BaseModel):
+    url: str
+    depth: int = 1
+
+class ChatResponse(BaseModel):
+    response: str
+    sources: List[str] = []
+    conversation_id: str
+
+class KnowledgeEntry(BaseModel):
+    title: str
+    content: str
+    url: str
+    summary: str
+    entities: List[str] = []
+    tags: List[str] = []
+
+@app.get("/api/")
+async def root():
+    return {"message": "Universal Knowledge Bot API is running"}
+
+@app.get("/api/health")
+async def health_check():
+    try:
+        # Check MongoDB connection
+        db.command('ping')
+        
+        # Check Gemini API
+        if not GEMINI_API_KEY:
+            return {"status": "error", "message": "Gemini API key not configured"}
+        
+        return {"status": "healthy", "mongodb": "connected", "gemini": "configured"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.post("/api/chat", response_model=ChatResponse)
+async def chat_query(request: QueryRequest):
+    try:
+        # Generate conversation ID if not provided
+        conversation_id = request.conversation_id or str(uuid.uuid4())
+        
+        # Search knowledge base
+        relevant_knowledge = await search_knowledge(request.query)
+        
+        # Prepare context for Gemini
+        context = prepare_context(relevant_knowledge, request.query)
+        
+        # Generate response using Gemini
+        response = await generate_ai_response(context, request.query)
+        
+        # Store conversation
+        conversation_entry = {
+            "id": conversation_id,
+            "query": request.query,
+            "response": response,
+            "sources": [k.get("url", "") for k in relevant_knowledge],
+            "timestamp": datetime.utcnow()
+        }
+        conversations_collection.insert_one(conversation_entry)
+        
+        return ChatResponse(
+            response=response,
+            sources=[k.get("url", "") for k in relevant_knowledge],
+            conversation_id=conversation_id
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
+
+@app.post("/api/ingest")
+async def ingest_content(request: UrlIngestRequest):
+    try:
+        ingested_count = await ingest_from_url(request.url, request.depth)
+        return {"message": f"Successfully ingested {ingested_count} pages", "url": request.url}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error ingesting content: {str(e)}")
+
+@app.get("/api/knowledge")
+async def get_knowledge():
+    try:
+        knowledge = list(knowledge_collection.find({}, {"_id": 0}).limit(50))
+        return {"knowledge": knowledge, "total": len(knowledge)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving knowledge: {str(e)}")
+
+@app.delete("/api/knowledge")
+async def clear_knowledge():
+    try:
+        result = knowledge_collection.delete_many({})
+        return {"message": f"Cleared {result.deleted_count} knowledge entries"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error clearing knowledge: {str(e)}")
+
+async def search_knowledge(query: str, limit: int = 5) -> List[Dict]:
+    """Search knowledge base using text search and relevance scoring"""
+    try:
+        # Simple text search - in production, use vector search
+        search_results = knowledge_collection.find(
+            {"$or": [
+                {"title": {"$regex": query, "$options": "i"}},
+                {"content": {"$regex": query, "$options": "i"}},
+                {"summary": {"$regex": query, "$options": "i"}},
+                {"tags": {"$in": [query.lower()]}}
+            ]},
+            {"_id": 0}
+        ).limit(limit)
+        
+        return list(search_results)
+    except Exception as e:
+        print(f"Search error: {e}")
+        return []
+
+def prepare_context(knowledge: List[Dict], query: str) -> str:
+    """Prepare context from knowledge base for AI response"""
+    if not knowledge:
+        return f"Query: {query}\nNo relevant knowledge found in the database. Please provide a general response based on your training data."
+    
+    context = f"Query: {query}\n\nRelevant Knowledge:\n"
+    for i, item in enumerate(knowledge, 1):
+        context += f"\n{i}. Title: {item.get('title', 'Unknown')}\n"
+        context += f"   Content: {item.get('content', '')[:500]}...\n"
+        context += f"   Source: {item.get('url', 'Unknown')}\n"
+    
+    context += "\nPlease provide a comprehensive answer based on the above knowledge and your training data."
+    return context
+
+async def generate_ai_response(context: str, query: str) -> str:
+    """Generate AI response using Google Gemini"""
+    try:
+        if not GEMINI_API_KEY:
+            return "AI service is not configured. Please set up the Gemini API key."
+        
+        prompt = f"""You are a universal knowledge assistant. Answer the user's question comprehensively using the provided context and your knowledge.
+
+{context}
+
+Please provide a detailed, accurate, and helpful response. If you use information from the provided sources, acknowledge them naturally in your response."""
+
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        return f"Error generating AI response: {str(e)}"
+
+async def ingest_from_url(url: str, depth: int = 1) -> int:
+    """Ingest content from URL with specified depth"""
+    ingested_count = 0
+    visited_urls = set()
+    
+    async def scrape_page(page_url: str, current_depth: int):
+        nonlocal ingested_count
+        
+        if current_depth > depth or page_url in visited_urls:
+            return
+        
+        visited_urls.add(page_url)
+        
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(page_url)
+                response.raise_for_status()
+                
+                soup = BeautifulSoup(response.content, 'html.parser')
+                
+                # Extract content
+                title = soup.find('title')
+                title_text = title.get_text().strip() if title else urlparse(page_url).path
+                
+                # Remove script and style elements
+                for script in soup(["script", "style"]):
+                    script.decompose()
+                
+                # Extract text content
+                content = soup.get_text()
+                content = re.sub(r'\s+', ' ', content).strip()
+                
+                if len(content) > 100:  # Only store meaningful content
+                    # Generate summary using Gemini
+                    summary = await generate_summary(content[:1000])
+                    
+                    # Extract entities and tags
+                    entities = extract_entities(content)
+                    tags = extract_tags(title_text, content)
+                    
+                    # Store in knowledge base
+                    knowledge_entry = {
+                        "id": str(uuid.uuid4()),
+                        "title": title_text,
+                        "content": content[:5000],  # Limit content size
+                        "url": page_url,
+                        "summary": summary,
+                        "entities": entities,
+                        "tags": tags,
+                        "ingested_at": datetime.utcnow()
+                    }
+                    
+                    # Check if already exists
+                    existing = knowledge_collection.find_one({"url": page_url})
+                    if existing:
+                        knowledge_collection.update_one(
+                            {"url": page_url},
+                            {"$set": knowledge_entry}
+                        )
+                    else:
+                        knowledge_collection.insert_one(knowledge_entry)
+                    
+                    ingested_count += 1
+                    
+                    # Extract links for deeper crawling
+                    if current_depth < depth:
+                        links = soup.find_all('a', href=True)
+                        for link in links[:10]:  # Limit links to prevent explosion
+                            href = link['href']
+                            full_url = urljoin(page_url, href)
+                            
+                            # Only follow HTTP/HTTPS links on same domain
+                            if full_url.startswith(('http://', 'https://')):
+                                parsed_original = urlparse(page_url)
+                                parsed_new = urlparse(full_url)
+                                
+                                if parsed_original.netloc == parsed_new.netloc:
+                                    await scrape_page(full_url, current_depth + 1)
+                
+        except Exception as e:
+            print(f"Error scraping {page_url}: {e}")
+    
+    await scrape_page(url, 1)
+    return ingested_count
+
+async def generate_summary(content: str) -> str:
+    """Generate summary using Gemini"""
+    try:
+        if not GEMINI_API_KEY:
+            return content[:200] + "..."
+        
+        prompt = f"Summarize the following content in 2-3 sentences:\n\n{content}"
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        return content[:200] + "..."
+
+def extract_entities(content: str) -> List[str]:
+    """Extract basic entities from content"""
+    # Simple entity extraction - in production, use NLP libraries
+    entities = []
+    
+    # Extract capitalized words (potential proper nouns)
+    words = re.findall(r'\b[A-Z][a-z]+\b', content)
+    entities.extend(list(set(words))[:10])  # Limit to 10 entities
+    
+    return entities
+
+def extract_tags(title: str, content: str) -> List[str]:
+    """Extract tags from title and content"""
+    tags = []
+    
+    # Extract keywords from title
+    title_words = re.findall(r'\b\w+\b', title.lower())
+    tags.extend([word for word in title_words if len(word) > 3])
+    
+    # Extract common technical terms
+    tech_terms = ['api', 'database', 'server', 'client', 'web', 'mobile', 'app', 'software', 'hardware']
+    for term in tech_terms:
+        if term in content.lower():
+            tags.append(term)
+    
+    return list(set(tags))[:10]  # Limit to 10 tags
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8001)
