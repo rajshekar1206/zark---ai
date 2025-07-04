@@ -15,10 +15,23 @@ function App() {
   const [activeTab, setActiveTab] = useState('chat');
   const messagesEndRef = useRef(null);
 
+  const [detailedStatus, setDetailedStatus] = useState(null);
+
   useEffect(() => {
     checkApiHealth();
     getKnowledgeCount();
+    getDetailedStatus();
   }, []);
+
+  const getDetailedStatus = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/status`);
+      const data = await response.json();
+      setDetailedStatus(data);
+    } catch (error) {
+      console.error('Error fetching detailed status:', error);
+    }
+  };
 
   useEffect(() => {
     scrollToBottom();
