@@ -395,11 +395,11 @@ body {
 }
 
 .message.user .message-content {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #1e3c72, #2a5298);
   color: white;
   padding: 16px 20px;
   border-radius: 20px 20px 6px 20px;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(30, 60, 114, 0.3);
   animation: messageSlide 0.3s ease-out;
 }
 
