@@ -1294,3 +1294,26 @@ body {
 .setup-section h3 {
   color: #3b82f6;
 }
+
+@media (max-width: 480px) {
+  .welcome-content h3 {
+    font-size: 20px;
+  }
+
+  .example-questions {
+    max-width: 100%;
+  }
+
+  .knowledge-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .help-modal {
+    width: 95%;
+    margin: 10px;
+  }
+  
+  .help-content {
+    padding: 20px;
+  }
+}
