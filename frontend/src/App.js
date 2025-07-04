@@ -153,6 +153,13 @@ function App() {
   const clearChat = () => {
     setMessages([]);
     setConversationId(null);
+    setInputMessage('');
+  };
+
+  const startNewConversation = () => {
+    setMessages([]);
+    setConversationId(null);
+    setInputMessage('');
   };
 
   const handleKeyPress = (e) => {
