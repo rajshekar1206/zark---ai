@@ -229,16 +229,16 @@ function App() {
                   </div>
                   <div className="welcome-content">
                     <h3>Hi, I'm Zark! 👋</h3>
-                    <p>Your AI knowledge assistant. Ask me anything!</p>
+                    <p>Your AI assistant. Ask me anything!</p>
                     <div className="example-questions">
                       <button className="example-btn" onClick={() => setInputMessage("What is quantum computing?")}>
-                        🔬 What is quantum computing?
+                        🔬 Quantum computing
                       </button>
                       <button className="example-btn" onClick={() => setInputMessage("Explain machine learning")}>
-                        🤖 Explain machine learning
+                        🤖 Machine learning
                       </button>
                       <button className="example-btn" onClick={() => setInputMessage("Tell me about space exploration")}>
-                        🚀 Tell me about space exploration
+                        🚀 Space exploration
                       </button>
                     </div>
                   </div>
