@@ -178,10 +178,10 @@ def prepare_context(knowledge: List[Dict], query: str) -> str:
     return context
 
 async def generate_ai_response(context: str, query: str) -> str:
-    """Generate AI response using Google Gemini"""
+    """Generate AI response using Groq"""
     try:
-        if not GEMINI_API_KEY:
-            return "AI service is not configured. Please set up the Gemini API key."
+        if not GROQ_API_KEY:
+            return "AI service is not configured. Please set up the Groq API key."
         
         # Check if user is asking for more details
         is_detailed_request = any(phrase in query.lower() for phrase in [
@@ -190,20 +190,29 @@ async def generate_ai_response(context: str, query: str) -> str:
         ])
         
         if is_detailed_request:
-            prompt = f"""You are Zark, a helpful AI knowledge assistant. Answer the user's question comprehensively using the provided context and your knowledge.
+            prompt = f"""You are Zark, an AI assistant. Answer comprehensively using the provided context.
 
 {context}
 
-Please provide a detailed, accurate, and helpful response. If you use information from the provided sources, acknowledge them naturally in your response."""
+Provide a detailed, accurate response. If you use information from sources, acknowledge them naturally."""
         else:
-            prompt = f"""You are Zark, a helpful AI knowledge assistant. Answer the user's question concisely using the provided context and your knowledge.
+            prompt = f"""You are Zark, an AI assistant. Answer concisely using the provided context.
 
 {context}
 
-Please provide a concise response in 5 lines or less. Be accurate and helpful, but keep it brief unless the user specifically asks for more details."""
+Provide a brief response in 5 lines or less. Be accurate and helpful."""
 
-        response = model.generate_content(prompt)
-        return response.text
+        response = groq_client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": "You are Zark, a helpful AI assistant."},
+                {"role": "user", "content": prompt}
+            ],
+            model="llama3-70b-8192",
+            max_tokens=1024,
+            temperature=0.7
+        )
+        
+        return response.choices[0].message.content
     except Exception as e:
         return f"Error generating AI response: {str(e)}"
 
