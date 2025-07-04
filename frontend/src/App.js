@@ -15,7 +15,19 @@ function App() {
   const [activeTab, setActiveTab] = useState('chat');
   const messagesEndRef = useRef(null);
 
-  const [detailedStatus, setDetailedStatus] = useState(null);
+  const [showHelp, setShowHelp] = useState(false);
+  const [helpInfo, setHelpInfo] = useState(null);
+
+  const getHelpInfo = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/help`);
+      const data = await response.json();
+      setHelpInfo(data);
+      setShowHelp(true);
+    } catch (error) {
+      console.error('Error fetching help info:', error);
+    }
+  };
 
   useEffect(() => {
     checkApiHealth();
