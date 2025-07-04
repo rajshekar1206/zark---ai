@@ -118,9 +118,20 @@ async def chat_query(request: QueryRequest):
 @app.post("/api/ingest")
 async def ingest_content(request: UrlIngestRequest):
     try:
+        print(f"Starting ingestion for URL: {request.url}")
         ingested_count = await ingest_from_url(request.url, request.depth)
-        return {"message": f"Successfully ingested {ingested_count} pages", "url": request.url}
+        
+        # Verify the content was actually stored
+        total_entries = knowledge_collection.count_documents({})
+        print(f"Total entries in knowledge base after ingestion: {total_entries}")
+        
+        return {
+            "message": f"Successfully ingested {ingested_count} pages from {request.url}",
+            "url": request.url,
+            "total_entries": total_entries
+        }
     except Exception as e:
+        print(f"Ingestion error: {e}")
         raise HTTPException(status_code=500, detail=f"Error ingesting content: {str(e)}")
 
 @app.get("/api/knowledge")
