@@ -129,6 +129,9 @@ frontend:
       - working: true
         agent: "main"
         comment: "Created beautiful night sky UI with twinkling stars, glowing moon with craters, floating clouds with realistic movement, shooting stars, and deep blue gradient background matching the provided image. Added live moment animations including star twinkling, moon glow, cloud movement, and shooting star effects."
+      - working: true
+        agent: "testing"
+        comment: "Verified the night sky background with stars, moon, and clouds animations. All animations are working correctly including star twinkling, moon glow, cloud movement, and shooting star effects."
   
   - task: "Make navigation tabs permanent/sticky when scrolling"
     implemented: true
@@ -141,6 +144,21 @@ frontend:
       - working: true
         agent: "main"
         comment: "Made tabs-container sticky with position: sticky, top: 0, z-index: 10, and backdrop-filter blur. Chat/Manage buttons now remain visible and accessible when scrolling through messages."
+      - working: true
+        agent: "testing"
+        comment: "Confirmed that navigation tabs remain visible and accessible when scrolling through messages. The sticky behavior works as expected."
+        
+  - task: "Fix Sources functionality"
+    implemented: true
+    working: false
+    file: "frontend/src/App.js"
+    stuck_count: 1
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "The Sources toggle button works visually (changes from 'Sources Off' to 'Sources On'), but doesn't consistently show sources when toggled ON. Additionally, explicit requests for sources like 'Where did you get this information?' or 'Show me sources' don't always work as expected."
 
 metadata:
   created_by: "main_agent"
