@@ -387,6 +387,104 @@ async def generate_summary(content: str) -> str:
     except Exception as e:
         return content[:200] + "..."
 
+
+async def generate_enhanced_summary(content: str, title: str) -> str:
+    """Generate enhanced summary using Groq with title context"""
+    try:
+        if not GROQ_API_KEY:
+            return content[:300] + "..."
+        
+        response = groq_client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": "You are a helpful AI assistant that creates concise, informative summaries."},
+                {"role": "user", "content": f"Create a comprehensive summary of this content about '{title}':\n\n{content}"}
+            ],
+            model="llama3-70b-8192",
+            max_tokens=200,
+            temperature=0.3
+        )
+        
+        return response.choices[0].message.content
+    except Exception as e:
+        print(f"Enhanced summary generation error: {e}")
+        return content[:300] + "..."
+
+def extract_enhanced_entities(content: str) -> List[str]:
+    """Extract enhanced entities from content"""
+    entities = []
+    
+    # Extract capitalized words (potential proper nouns)
+    words = re.findall(r'\b[A-Z][a-z]+(?:\s[A-Z][a-z]+)*\b', content)
+    entities.extend(list(set(words))[:15])
+    
+    # Extract dates
+    dates = re.findall(r'\b\d{4}\b|\b\d{1,2}/\d{1,2}/\d{4}\b|\b\d{1,2}\s\w+\s\d{4}\b', content)
+    entities.extend(dates[:5])
+    
+    # Extract numbers with units
+    numbers = re.findall(r'\b\d+(?:\.\d+)?\s*(?:percent|%|million|billion|thousand|km|miles|years?|days?)\b', content, re.IGNORECASE)
+    entities.extend(numbers[:5])
+    
+    return list(set(entities))[:20]
+
+def extract_enhanced_tags(title: str, content: str) -> List[str]:
+    """Extract enhanced tags from title and content"""
+    tags = []
+    
+    # Extract keywords from title
+    title_words = re.findall(r'\b\w+\b', title.lower())
+    tags.extend([word for word in title_words if len(word) > 3])
+    
+    # Common topic categories
+    categories = {
+        'technology': ['technology', 'software', 'computer', 'digital', 'internet', 'ai', 'artificial intelligence', 'machine learning'],
+        'science': ['science', 'research', 'study', 'experiment', 'discovery', 'theory'],
+        'history': ['history', 'historical', 'ancient', 'century', 'war', 'empire'],
+        'geography': ['country', 'city', 'region', 'continent', 'ocean', 'mountain'],
+        'business': ['company', 'business', 'economy', 'market', 'industry', 'financial'],
+        'health': ['health', 'medical', 'disease', 'treatment', 'medicine', 'hospital']
+    }
+    
+    content_lower = content.lower()
+    for category, keywords in categories.items():
+        if any(keyword in content_lower for keyword in keywords):
+            tags.append(category)
+    
+    # Extract frequent meaningful words
+    words = re.findall(r'\b[a-zA-Z]{4,}\b', content.lower())
+    word_freq = {}
+    for word in words:
+        word_freq[word] = word_freq.get(word, 0) + 1
+    
+    frequent_words = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)
+    tags.extend([word for word, freq in frequent_words[:10] if freq > 2])
+    
+    return list(set(tags))[:15]
+
+def extract_keywords(title: str, content: str) -> List[str]:
+    """Extract searchable keywords from content"""
+    keywords = []
+    
+    # Title words
+    title_words = re.findall(r'\b\w+\b', title.lower())
+    keywords.extend([word for word in title_words if len(word) > 2])
+    
+    # Important phrases (quoted text, bold text indicators)
+    phrases = re.findall(r'"([^"]+)"', content)
+    for phrase in phrases:
+        keywords.extend(phrase.lower().split())
+    
+    # Words that appear multiple times
+    words = re.findall(r'\b[a-zA-Z]{3,}\b', content.lower())
+    word_count = {}
+    for word in words:
+        word_count[word] = word_count.get(word, 0) + 1
+    
+    # Add words that appear 3+ times
+    frequent_keywords = [word for word, count in word_count.items() if count >= 3]
+    keywords.extend(frequent_keywords[:20])
+    
+    return list(set(keywords))[:25]
 def extract_entities(content: str) -> List[str]:
     """Extract basic entities from content"""
     # Simple entity extraction - in production, use NLP libraries
