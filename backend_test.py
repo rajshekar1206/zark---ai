@@ -168,7 +168,168 @@ class ZarkAIAPITest(unittest.TestCase):
         self.assertIn('message', data)
         self.assertIn('0 pages', data['message'], "Should report 0 pages ingested for invalid URL")
         
+    def test_09_sources_functionality_off(self):
+        """Test the chat endpoint with show_sources=false (default)"""
+        print("\n🔍 Testing Sources Functionality (OFF)...")
         
+        # First ensure we have content to reference
+        self._ensure_content_exists()
+        
+        # Test with show_sources=false (default)
+        payload = {
+            "query": "What is artificial intelligence?",
+            "conversation_id": None,
+            "show_sources": False
+        }
+        response = requests.post(
+            f"{self.base_url}/api/chat", 
+            headers=self.headers,
+            json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        print(f"✅ Chat Response with show_sources=false: {len(data['response'])} characters")
+        print(f"✅ Sources returned: {data['sources']}")
+        
+        self.assertIn('response', data)
+        self.assertIn('sources', data)
+        # Sources should be empty when show_sources is false
+        self.assertEqual(len(data['sources']), 0, "Sources should be empty when show_sources=false")
+        
+    def test_10_sources_functionality_on(self):
+        """Test the chat endpoint with show_sources=true"""
+        print("\n🔍 Testing Sources Functionality (ON)...")
+        
+        # First ensure we have content to reference
+        self._ensure_content_exists()
+        
+        # Test with show_sources=true
+        payload = {
+            "query": "What is artificial intelligence?",
+            "conversation_id": None,
+            "show_sources": True
+        }
+        response = requests.post(
+            f"{self.base_url}/api/chat", 
+            headers=self.headers,
+            json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        print(f"✅ Chat Response with show_sources=true: {len(data['response'])} characters")
+        print(f"✅ Sources returned: {data['sources']}")
+        
+        self.assertIn('response', data)
+        self.assertIn('sources', data)
+        
+        # Check if sources are returned when show_sources is true
+        # Note: This might not always return sources if the knowledge base doesn't have relevant content
+        # So we'll just log the result rather than asserting
+        if len(data['sources']) > 0:
+            print(f"✅ Sources are correctly returned when show_sources=true: {len(data['sources'])} sources")
+        else:
+            print("⚠️ No sources returned. This could be normal if no relevant knowledge was found.")
+            
+    def test_11_explicit_source_request(self):
+        """Test asking explicitly for sources in the query"""
+        print("\n🔍 Testing Explicit Source Request...")
+        
+        # First ensure we have content to reference
+        self._ensure_content_exists()
+        
+        # Test with a query that explicitly asks for sources
+        payload = {
+            "query": "Where did you get information about artificial intelligence?",
+            "conversation_id": None,
+            "show_sources": True
+        }
+        response = requests.post(
+            f"{self.base_url}/api/chat", 
+            headers=self.headers,
+            json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        print(f"✅ Chat Response for explicit source request: {len(data['response'])} characters")
+        print(f"✅ Sources returned: {data['sources']}")
+        
+        self.assertIn('response', data)
+        self.assertIn('sources', data)
+        
+        # Check if the response mentions sources
+        source_terms = ["source", "reference", "from", "wikipedia", "article", "information"]
+        response_has_source_mention = any(term in data['response'].lower() for term in source_terms)
+        
+        if response_has_source_mention:
+            print("✅ Response mentions sources when explicitly asked")
+        else:
+            print("⚠️ Response doesn't explicitly mention sources when asked")
+            
+    def test_12_specific_ai_questions(self):
+        """Test specific questions about artificial intelligence after adding Wikipedia content"""
+        print("\n🔍 Testing Specific AI Questions...")
+        
+        # First ensure we have content to reference
+        self._ensure_content_exists()
+        
+        # Test with specific questions about AI
+        questions = [
+            "What are neural networks?",
+            "Tell me about machine learning",
+            "What is deep learning?",
+            "How is AI used today?"
+        ]
+        
+        for question in questions:
+            print(f"\nTesting question: '{question}'")
+            payload = {
+                "query": question,
+                "conversation_id": None,
+                "show_sources": True
+            }
+            response = requests.post(
+                f"{self.base_url}/api/chat", 
+                headers=self.headers,
+                json=payload
+            )
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            print(f"✅ Response length: {len(data['response'])} characters")
+            print(f"✅ Sources returned: {len(data['sources'])}")
+            
+            # Check if the response is substantive (more than 100 characters)
+            self.assertGreater(len(data['response']), 100, f"Response to '{question}' should be substantive")
+            
+            # Print first 100 chars of response for verification
+            print(f"Response preview: {data['response'][:100]}...")
+            
+    def _ensure_content_exists(self):
+        """Helper method to ensure content exists in the knowledge base"""
+        # Check if we have content
+        response = requests.get(f"{self.base_url}/api/knowledge")
+        data = response.json()
+        
+        if data['total'] == 0:
+            print("Knowledge base is empty. Ingesting content...")
+            payload = {
+                "url": self.test_url,
+                "depth": 1
+            }
+            response = requests.post(
+                f"{self.base_url}/api/ingest", 
+                headers=self.headers,
+                json=payload
+            )
+            self.assertEqual(response.status_code, 200)
+            print("Waiting for ingestion to complete...")
+            time.sleep(5)  # Give more time for ingestion
+            
+            # Verify content was added
+            response = requests.get(f"{self.base_url}/api/knowledge")
+            data = response.json()
+            print(f"Knowledge base now contains {data['total']} entries")
+        else:
+            print(f"Knowledge base already contains {data['total']} entries")
         
     def run_all_tests(self):
         """Run all tests in sequence"""
