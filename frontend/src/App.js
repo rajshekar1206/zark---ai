@@ -446,6 +446,82 @@ function App() {
             </div>
           </div>
         )}
+        
+        {showHelp && helpInfo && (
+          <div className="help-modal-overlay" onClick={() => setShowHelp(false)}>
+            <div className="help-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="help-header">
+                <h2>🤖 How Zark-AI Works</h2>
+                <button onClick={() => setShowHelp(false)} className="close-button">×</button>
+              </div>
+              <div className="help-content">
+                <div className="status-section">
+                  <h3>Current Status</h3>
+                  <p className={`status-badge ${helpInfo.api_status}`}>
+                    {helpInfo.api_status === 'configured' ? '🟢 Online Mode' : '🟡 Limited Mode'}
+                  </p>
+                  <p>Knowledge Entries: {helpInfo.knowledge_entries}</p>
+                </div>
+                
+                <div className="capabilities-section">
+                  <h3>Capabilities</h3>
+                  {helpInfo.capabilities.online_mode.enabled ? (
+                    <div className="capability-mode online">
+                      <h4>🟢 Online Mode (Current)</h4>
+                      <ul>
+                        {helpInfo.capabilities.online_mode.features.map((feature, index) => (
+                          <li key={index}>{feature}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    <div className="capability-mode limited">
+                      <h4>🟡 Limited Mode (Current)</h4>
+                      <ul>
+                        {helpInfo.capabilities.offline_mode.features.map((feature, index) => (
+                          <li key={index}>{feature}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="usage-section">
+                  <h3>How to Use</h3>
+                  <div className="usage-steps">
+                    <div className="step">
+                      <span className="step-number">1</span>
+                      <p>{helpInfo.how_to_use.add_content}</p>
+                    </div>
+                    <div className="step">
+                      <span className="step-number">2</span>
+                      <p>{helpInfo.how_to_use.ask_questions}</p>
+                    </div>
+                  </div>
+                  <div className="best-practices">
+                    <h4>Best Practices:</h4>
+                    <ul>
+                      {helpInfo.how_to_use.best_practices.map((practice, index) => (
+                        <li key={index}>{practice}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+                
+                {!helpInfo.capabilities.online_mode.enabled && (
+                  <div className="setup-section">
+                    <h3>Enable Full AI Mode</h3>
+                    <ol>
+                      {helpInfo.setup_instructions.for_online_mode.map((step, index) => (
+                        <li key={index}>{step}</li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
