@@ -96,7 +96,7 @@ async def chat_query(request: QueryRequest):
         # Prepare context for Gemini
         context = prepare_context(relevant_knowledge, request.query)
         
-        # Generate response using Gemini
+        # Generate response using Groq
         response = await generate_ai_response(context, request.query)
         
         # Store conversation
