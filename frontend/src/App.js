@@ -221,9 +221,15 @@ function App() {
                   </p>
                 </div>
               </div>
-              <button onClick={clearChat} className="clear-button">
-                <span>🗑️</span>
-              </button>
+              <div className="header-actions">
+                <button onClick={startNewConversation} className="new-chat-button">
+                  <span>💬</span>
+                  New Chat
+                </button>
+                <button onClick={clearChat} className="clear-button">
+                  <span>🗑️</span>
+                </button>
+              </div>
             </div>
             
             <div className="messages-container">
