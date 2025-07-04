@@ -198,7 +198,7 @@ body {
 .avatar-circle {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  background: linear-gradient(135deg, #667eea, #764ba2);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -206,7 +206,13 @@ body {
   color: white;
   font-weight: bold;
   font-size: 20px;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from { box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
+  to { box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6); }
 }
 
 .avatar-circle.large {
