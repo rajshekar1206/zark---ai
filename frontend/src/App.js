@@ -310,7 +310,7 @@ function App() {
                 <div className="welcome-message">
                   <div className="welcome-avatar">
                     <div className="avatar-circle large">
-                      <span className="avatar-text">Z</span>
+                      <ZarkRobot size="large" />
                     </div>
                   </div>
                   <div className="welcome-content">
