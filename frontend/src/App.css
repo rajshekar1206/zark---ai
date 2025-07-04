@@ -487,6 +487,10 @@ body {
   border-radius: 50%;
 }
 
+.status-dot.limited {
+  background: #f59e0b;
+}
+
 .status-dot.online {
   background: #10b981;
   animation: blink 2s infinite;
