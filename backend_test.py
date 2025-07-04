@@ -7,7 +7,7 @@ class ZarkAIAPITest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(ZarkAIAPITest, self).__init__(*args, **kwargs)
         # Get the backend URL from frontend .env file
-        self.base_url = "https://f259baa9-42df-4484-af1c-c2849ef313d4.preview.emergentagent.com"
+        self.base_url = "https://5fdd8ed9-e880-404a-ba41-e7079e18cde9.preview.emergentagent.com"
         self.headers = {'Content-Type': 'application/json'}
         
     def test_01_health_check(self):
