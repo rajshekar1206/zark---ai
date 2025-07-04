@@ -175,6 +175,7 @@ class ZarkAIAPITest(unittest.TestCase):
             self.test_05_chat_with_knowledge()
             self.test_06_detailed_response()
             self.test_07_clear_knowledge()
+            self.test_08_error_handling()
             print("\n✅ All API tests completed successfully!")
             return True
         except Exception as e:
