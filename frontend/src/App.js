@@ -171,6 +171,23 @@ function App() {
 
   return (
     <div className="app">
+      <div className="night-sky">
+        <div className="stars">
+          {[...Array(20)].map((_, i) => (
+            <div key={i} className="star"></div>
+          ))}
+        </div>
+        <div className="moon"></div>
+        <div className="clouds">
+          <div className="cloud cloud1"></div>
+          <div className="cloud cloud2"></div>
+          <div className="cloud cloud3"></div>
+        </div>
+        <div className="shooting-star shooting-star1"></div>
+        <div className="shooting-star shooting-star2"></div>
+        <div className="shooting-star shooting-star3"></div>
+      </div>
+
       <div className="floating-orbs">
         <div className="orb orb-1"></div>
         <div className="orb orb-2"></div>
