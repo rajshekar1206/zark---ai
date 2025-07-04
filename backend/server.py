@@ -468,32 +468,7 @@ def extract_keywords(title: str, content: str) -> List[str]:
     keywords.extend(frequent_keywords[:20])
     
     return list(set(keywords))[:25]
-def extract_entities(content: str) -> List[str]:
-    """Extract basic entities from content"""
-    # Simple entity extraction - in production, use NLP libraries
-    entities = []
-    
-    # Extract capitalized words (potential proper nouns)
-    words = re.findall(r'\b[A-Z][a-z]+\b', content)
-    entities.extend(list(set(words))[:10])  # Limit to 10 entities
-    
-    return entities
 
-def extract_tags(title: str, content: str) -> List[str]:
-    """Extract tags from title and content"""
-    tags = []
-    
-    # Extract keywords from title
-    title_words = re.findall(r'\b\w+\b', title.lower())
-    tags.extend([word for word in title_words if len(word) > 3])
-    
-    # Extract common technical terms
-    tech_terms = ['api', 'database', 'server', 'client', 'web', 'mobile', 'app', 'software', 'hardware']
-    for term in tech_terms:
-        if term in content.lower():
-            tags.append(term)
-    
-    return list(set(tags))[:10]  # Limit to 10 tags
 
 if __name__ == "__main__":
     import uvicorn
