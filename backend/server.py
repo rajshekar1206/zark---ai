@@ -255,23 +255,55 @@ async def search_knowledge(query: str, limit: int = 5) -> List[Dict]:
         return []
 
 def prepare_context(knowledge: List[Dict], query: str) -> str:
-    """Prepare context from knowledge base for AI response"""
+    """Prepare enhanced context from knowledge base for AI response"""
     # Get total knowledge count
     total_count = knowledge_collection.count_documents({})
     
     if not knowledge:
         if total_count > 0:
-            return f"Query: {query}\n\nI have access to {total_count} knowledge entries, but none directly match your query. Let me provide a response based on my training data and general knowledge."
+            return f"Query: {query}\n\nI have access to {total_count} knowledge entries in my database, but none directly match your specific query. I'll provide a response based on my general knowledge and training data."
         else:
-            return f"Query: {query}\n\nNo knowledge entries found in the database. Please provide a concise response based on your training data."
+            return f"Query: {query}\n\nNo knowledge entries found in the database. I'll provide a response based on my general knowledge and training data."
     
-    context = f"Query: {query}\n\nI have access to {total_count} total knowledge entries. Here are the most relevant ones:\n"
+    # Check if we have relevant knowledge
+    context = f"Query: {query}\n\n"
+    context += f"I have access to {total_count} total knowledge entries. Here are the most relevant ones for your question:\n"
+    
     for i, item in enumerate(knowledge, 1):
-        context += f"\n{i}. Title: {item.get('title', 'Unknown')}\n"
-        context += f"   Content: {item.get('content', '')[:500]}...\n"
-        context += f"   Source: {item.get('url', 'Unknown')}\n"
+        context += f"\n--- Source {i}: {item.get('title', 'Unknown')} ---\n"
+        context += f"URL: {item.get('url', 'Unknown')}\n"
+        
+        # Include summary if available
+        if item.get('summary'):
+            context += f"Summary: {item.get('summary', '')}\n"
+        
+        # Include relevant content sections
+        content = item.get('content', '')
+        if content:
+            # Try to find the most relevant part of the content for the query
+            query_words = query.lower().split()
+            content_lower = content.lower()
+            
+            # Find sentences that contain query words
+            sentences = content.split('. ')
+            relevant_sentences = []
+            for sentence in sentences:
+                if any(word in sentence.lower() for word in query_words if len(word) > 2):
+                    relevant_sentences.append(sentence.strip())
+                    if len(relevant_sentences) >= 3:  # Limit to 3 most relevant sentences
+                        break
+            
+            if relevant_sentences:
+                context += f"Relevant Content: {'. '.join(relevant_sentences)}\n"
+            else:
+                context += f"Content: {content[:800]}...\n"
+        
+        # Include tags if available
+        if item.get('tags'):
+            context += f"Tags: {', '.join(item.get('tags', [])[:5])}\n"
     
-    context += "\nPlease provide a helpful response based on the above knowledge and your training data. Be informative and accurate."
+    context += "\nBased on the above information from my knowledge base, please provide a comprehensive and accurate answer to the user's question. If the information directly answers their question, prioritize that content. If they're asking for specific details about the website content, reference the relevant sections."
+    
     return context
 
 async def generate_ai_response(context: str, query: str) -> str:
