@@ -19,7 +19,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Initialize FastAPI app
-app = FastAPI(title="Universal Knowledge Bot API")
+app = FastAPI(title="Zark AI Knowledge Assistant API")
 
 # Configure CORS
 app.add_middleware(
@@ -67,7 +67,7 @@ class KnowledgeEntry(BaseModel):
 
 @app.get("/api/")
 async def root():
-    return {"message": "Universal Knowledge Bot API is running"}
+    return {"message": "Zark AI Knowledge Assistant API is running"}
 
 @app.get("/api/health")
 async def health_check():
@@ -162,7 +162,7 @@ async def search_knowledge(query: str, limit: int = 5) -> List[Dict]:
 def prepare_context(knowledge: List[Dict], query: str) -> str:
     """Prepare context from knowledge base for AI response"""
     if not knowledge:
-        return f"Query: {query}\nNo relevant knowledge found in the database. Please provide a general response based on your training data."
+        return f"Query: {query}\nNo relevant knowledge found in the database. Please provide a concise response in 5 lines or less based on your training data."
     
     context = f"Query: {query}\n\nRelevant Knowledge:\n"
     for i, item in enumerate(knowledge, 1):
@@ -170,7 +170,7 @@ def prepare_context(knowledge: List[Dict], query: str) -> str:
         context += f"   Content: {item.get('content', '')[:500]}...\n"
         context += f"   Source: {item.get('url', 'Unknown')}\n"
     
-    context += "\nPlease provide a comprehensive answer based on the above knowledge and your training data."
+    context += "\nPlease provide a concise response in 5 lines or less based on the above knowledge and your training data. If the user asks for more details, then provide a comprehensive explanation."
     return context
 
 async def generate_ai_response(context: str, query: str) -> str:
@@ -179,11 +179,24 @@ async def generate_ai_response(context: str, query: str) -> str:
         if not GEMINI_API_KEY:
             return "AI service is not configured. Please set up the Gemini API key."
         
-        prompt = f"""You are a universal knowledge assistant. Answer the user's question comprehensively using the provided context and your knowledge.
+        # Check if user is asking for more details
+        is_detailed_request = any(phrase in query.lower() for phrase in [
+            "more details", "more information", "explain further", "tell me more", 
+            "elaborate", "expand", "comprehensive", "detailed", "in depth"
+        ])
+        
+        if is_detailed_request:
+            prompt = f"""You are Zark, a helpful AI knowledge assistant. Answer the user's question comprehensively using the provided context and your knowledge.
 
 {context}
 
 Please provide a detailed, accurate, and helpful response. If you use information from the provided sources, acknowledge them naturally in your response."""
+        else:
+            prompt = f"""You are Zark, a helpful AI knowledge assistant. Answer the user's question concisely using the provided context and your knowledge.
+
+{context}
+
+Please provide a concise response in 5 lines or less. Be accurate and helpful, but keep it brief unless the user specifically asks for more details."""
 
         response = model.generate_content(prompt)
         return response.text

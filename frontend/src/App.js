@@ -8,8 +8,8 @@ function App() {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState(null);
-  const [ingestUrl, setIngestUrl] = useState('');
-  const [isIngesting, setIsIngesting] = useState(false);
+  const [insertUrl, setInsertUrl] = useState('');
+  const [isInserting, setIsInserting] = useState(false);
   const [knowledgeCount, setKnowledgeCount] = useState(0);
   const [apiHealth, setApiHealth] = useState(null);
   const [activeTab, setActiveTab] = useState('chat');
@@ -103,10 +103,10 @@ function App() {
     }
   };
 
-  const handleIngestUrl = async () => {
-    if (!ingestUrl.trim()) return;
+  const handleInsertUrl = async () => {
+    if (!insertUrl.trim()) return;
 
-    setIsIngesting(true);
+    setIsInserting(true);
     try {
       const response = await fetch(`${BACKEND_URL}/api/ingest`, {
         method: 'POST',
@@ -114,7 +114,7 @@ function App() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          url: ingestUrl,
+          url: insertUrl,
           depth: 2
         })
       });
@@ -122,16 +122,16 @@ function App() {
       const data = await response.json();
 
       if (response.ok) {
-        alert(`Successfully ingested content: ${data.message}`);
-        setIngestUrl('');
+        alert(`Successfully inserted content: ${data.message}`);
+        setInsertUrl('');
         getKnowledgeCount();
       } else {
-        throw new Error(data.detail || 'Error ingesting content');
+        throw new Error(data.detail || 'Error inserting content');
       }
     } catch (error) {
-      alert(`Error ingesting content: ${error.message}`);
+      alert(`Error inserting content: ${error.message}`);
     } finally {
-      setIsIngesting(false);
+      setIsInserting(false);
     }
   };
 
@@ -164,64 +164,95 @@ function App() {
 
   return (
     <div className="app">
-      <div className="app-header">
-        <div className="header-content">
-          <h1>🤖 Universal Knowledge Bot</h1>
-          <p>Ask me anything - I'm powered by the world's knowledge!</p>
-          <div className="status-indicators">
-            <div className={`status-indicator ${apiHealth?.status === 'healthy' ? 'healthy' : 'error'}`}>
-              {apiHealth?.status === 'healthy' ? '🟢' : '🔴'} API Status
-            </div>
-            <div className="knowledge-count">
-              📚 Knowledge Base: {knowledgeCount} entries
-            </div>
-          </div>
-        </div>
+      <div className="floating-orbs">
+        <div className="orb orb-1"></div>
+        <div className="orb orb-2"></div>
+        <div className="orb orb-3"></div>
+        <div className="orb orb-4"></div>
+        <div className="orb orb-5"></div>
       </div>
 
-      <div className="app-body">
-        <div className="tabs">
+      <div className="app-container">
+        <div className="tabs-container">
           <button 
             className={`tab ${activeTab === 'chat' ? 'active' : ''}`}
             onClick={() => setActiveTab('chat')}
           >
-            💬 Chat
+            <span className="tab-icon">💬</span>
+            <span>Chat with Zark</span>
           </button>
           <button 
             className={`tab ${activeTab === 'manage' ? 'active' : ''}`}
             onClick={() => setActiveTab('manage')}
           >
-            ⚙️ Manage Knowledge
+            <span className="tab-icon">⚙️</span>
+            <span>Manage Knowledge</span>
           </button>
         </div>
 
         {activeTab === 'chat' ? (
-          <div className="chat-container">
+          <div className="chat-section">
             <div className="chat-header">
-              <h3>Chat with Universal Bot</h3>
+              <div className="bot-avatar">
+                <div className="avatar-circle">
+                  <span className="avatar-text">Z</span>
+                </div>
+                <div className="bot-info">
+                  <h3 className="bot-name">Zark</h3>
+                  <p className="bot-status">
+                    {apiHealth?.status === 'healthy' ? (
+                      <>
+                        <span className="status-dot online"></span>
+                        Online • {knowledgeCount} entries
+                      </>
+                    ) : (
+                      <>
+                        <span className="status-dot offline"></span>
+                        Offline
+                      </>
+                    )}
+                  </p>
+                </div>
+              </div>
               <button onClick={clearChat} className="clear-button">
-                🗑️ Clear Chat
+                <span>🗑️</span>
               </button>
             </div>
             
             <div className="messages-container">
               {messages.length === 0 ? (
                 <div className="welcome-message">
+                  <div className="welcome-avatar">
+                    <div className="avatar-circle large">
+                      <span className="avatar-text">Z</span>
+                    </div>
+                  </div>
                   <div className="welcome-content">
-                    <h3>👋 Welcome to Universal Knowledge Bot!</h3>
-                    <p>I can help you with questions about any topic. Try asking me:</p>
-                    <ul>
-                      <li>📚 "What is quantum computing?"</li>
-                      <li>🌍 "Tell me about climate change"</li>
-                      <li>💻 "How does machine learning work?"</li>
-                      <li>🔬 "Explain photosynthesis"</li>
-                    </ul>
-                    <p>Or ingest some web content first and ask specific questions about it!</p>
+                    <h3>Hi, I'm Zark! 👋</h3>
+                    <p>Your AI knowledge assistant. Ask me anything!</p>
+                    <div className="example-questions">
+                      <button className="example-btn" onClick={() => setInputMessage("What is quantum computing?")}>
+                        🔬 What is quantum computing?
+                      </button>
+                      <button className="example-btn" onClick={() => setInputMessage("Explain machine learning")}>
+                        🤖 Explain machine learning
+                      </button>
+                      <button className="example-btn" onClick={() => setInputMessage("Tell me about space exploration")}>
+                        🚀 Tell me about space exploration
+                      </button>
+                    </div>
                   </div>
                 </div>
               ) : (
                 messages.map((message) => (
                   <div key={message.id} className={`message ${message.type}`}>
+                    <div className="message-avatar">
+                      {message.type === 'user' ? (
+                        <div className="user-avatar">You</div>
+                      ) : (
+                        <div className="bot-avatar-small">Z</div>
+                      )}
+                    </div>
                     <div className="message-content">
                       <div className="message-text">{message.content}</div>
                       {message.sources && message.sources.length > 0 && (
@@ -234,14 +265,17 @@ function App() {
                           ))}
                         </div>
                       )}
+                      <div className="message-timestamp">{message.timestamp}</div>
                     </div>
-                    <div className="message-timestamp">{message.timestamp}</div>
                   </div>
                 ))
               )}
               
               {isLoading && (
-                <div className="message bot loading">
+                <div className="message bot">
+                  <div className="message-avatar">
+                    <div className="bot-avatar-small">Z</div>
+                  </div>
                   <div className="message-content">
                     <div className="typing-indicator">
                       <span></span>
@@ -255,94 +289,94 @@ function App() {
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="chat-input">
-              <textarea
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Ask me anything..."
-                disabled={isLoading}
-                rows={3}
-              />
-              <button 
-                onClick={handleSendMessage} 
-                disabled={isLoading || !inputMessage.trim()}
-                className="send-button"
-              >
-                {isLoading ? '⏳' : '🚀'} Send
-              </button>
+            <div className="chat-input-container">
+              <div className="chat-input">
+                <textarea
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Ask Zark anything..."
+                  disabled={isLoading}
+                  rows={1}
+                />
+                <button 
+                  onClick={handleSendMessage} 
+                  disabled={isLoading || !inputMessage.trim()}
+                  className="send-button"
+                >
+                  {isLoading ? <span className="loading-spinner"></span> : <span>🚀</span>}
+                </button>
+              </div>
             </div>
           </div>
         ) : (
-          <div className="manage-container">
-            <div className="manage-section">
-              <h3>🌐 Ingest Web Content</h3>
-              <p>Add knowledge from any website to expand my capabilities!</p>
-              <div className="ingest-form">
+          <div className="manage-section">
+            <div className="manage-card">
+              <div className="card-header">
+                <h3>🌐 Insert Web Content</h3>
+                <p>Add knowledge from websites to expand Zark's capabilities</p>
+              </div>
+              <div className="insert-form">
                 <input
                   type="url"
-                  value={ingestUrl}
-                  onChange={(e) => setIngestUrl(e.target.value)}
-                  placeholder="Enter URL (e.g., https://example.com)"
-                  disabled={isIngesting}
+                  value={insertUrl}
+                  onChange={(e) => setInsertUrl(e.target.value)}
+                  placeholder="Enter website URL..."
+                  disabled={isInserting}
+                  className="url-input"
                 />
                 <button 
-                  onClick={handleIngestUrl} 
-                  disabled={isIngesting || !ingestUrl.trim()}
-                  className="ingest-button"
+                  onClick={handleInsertUrl} 
+                  disabled={isInserting || !insertUrl.trim()}
+                  className="insert-button"
                 >
-                  {isIngesting ? '⏳ Ingesting...' : '📥 Ingest Content'}
+                  {isInserting ? (
+                    <>
+                      <span className="loading-spinner"></span>
+                      Inserting...
+                    </>
+                  ) : (
+                    <>
+                      <span>📥</span>
+                      Insert Content
+                    </>
+                  )}
                 </button>
               </div>
-              <div className="ingest-info">
+              <div className="insert-tips">
                 <p>💡 <strong>Tips:</strong></p>
                 <ul>
-                  <li>Try documentation sites like MDN, Wikipedia, or tech blogs</li>
-                  <li>The bot will crawl the page and related links</li>
-                  <li>Processing may take a few minutes for large sites</li>
+                  <li>Try Wikipedia articles, news sites, or documentation</li>
+                  <li>Zark will analyze the content and extract key information</li>
+                  <li>Processing may take a few moments for large sites</li>
                 </ul>
               </div>
             </div>
 
-            <div className="manage-section">
-              <h3>📊 Knowledge Base Management</h3>
+            <div className="manage-card">
+              <div className="card-header">
+                <h3>📊 Knowledge Base</h3>
+                <p>Manage Zark's knowledge database</p>
+              </div>
               <div className="knowledge-stats">
-                <div className="stat">
+                <div className="stat-card">
                   <div className="stat-value">{knowledgeCount}</div>
                   <div className="stat-label">Total Entries</div>
                 </div>
+                <div className="stat-card">
+                  <div className="stat-value">{apiHealth?.status === 'healthy' ? '✅' : '❌'}</div>
+                  <div className="stat-label">System Status</div>
+                </div>
               </div>
-              <div className="management-buttons">
-                <button onClick={getKnowledgeCount} className="refresh-button">
-                  🔄 Refresh Count
+              <div className="management-actions">
+                <button onClick={getKnowledgeCount} className="action-button refresh">
+                  <span>🔄</span>
+                  Refresh
                 </button>
-                <button onClick={clearKnowledge} className="danger-button">
-                  🗑️ Clear All Knowledge
+                <button onClick={clearKnowledge} className="action-button danger">
+                  <span>🗑️</span>
+                  Clear All
                 </button>
-              </div>
-            </div>
-
-            <div className="manage-section">
-              <h3>🔧 System Status</h3>
-              <div className="system-status">
-                <div className="status-item">
-                  <span className="status-label">API Status:</span>
-                  <span className={`status-value ${apiHealth?.status === 'healthy' ? 'healthy' : 'error'}`}>
-                    {apiHealth?.status === 'healthy' ? '✅ Healthy' : '❌ Error'}
-                  </span>
-                </div>
-                <div className="status-item">
-                  <span className="status-label">MongoDB:</span>
-                  <span className="status-value">
-                    {apiHealth?.mongodb === 'connected' ? '✅ Connected' : '❌ Disconnected'}
-                  </span>
-                </div>
-                <div className="status-item">
-                  <span className="status-label">AI Engine:</span>
-                  <span className="status-value">
-                    {apiHealth?.gemini === 'configured' ? '✅ Google Gemini Ready' : '❌ Not Configured'}
-                  </span>
-                </div>
               </div>
             </div>
           </div>
