@@ -160,6 +160,18 @@ frontend:
         agent: "testing"
         comment: "Verified that the robot icon appears in all avatar locations (header, welcome screen, chat messages). The robot icon has animated glowing eyes and antennas as required. The robot icon is properly displayed in different sizes (small, medium, large)."
         
+  - task: "Website content analysis functionality"
+    implemented: true
+    working: true
+    file: "frontend/src/App.js, backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the website content analysis feature. The application can ingest content from a Wikipedia URL and answer questions about the content. The knowledge count doesn't always update in the UI, but the content is successfully ingested and used for answering questions."
+        
   - task: "Fix Sources functionality"
     implemented: true
     working: false
