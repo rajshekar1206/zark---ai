@@ -9,6 +9,7 @@ class ZarkAIAPITest(unittest.TestCase):
         # Get the backend URL from frontend .env file
         self.base_url = "https://3d67ad8c-c69c-4c11-abdf-35bf0564dfa5.preview.emergentagent.com"
         self.headers = {'Content-Type': 'application/json'}
+        self.test_url = "https://en.wikipedia.org/wiki/Artificial_intelligence"
         
     def test_01_health_check(self):
         """Test the health check endpoint"""
