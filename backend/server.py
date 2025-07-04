@@ -307,10 +307,31 @@ def prepare_context(knowledge: List[Dict], query: str) -> str:
     return context
 
 async def generate_ai_response(context: str, query: str) -> str:
-    """Generate AI response using Groq"""
+    """Generate AI response using Groq with enhanced error handling"""
     try:
         if not GROQ_API_KEY:
-            return "AI service is not configured. Please set up the Groq API key."
+            return """🔴 **OFFLINE MODE**: I'm currently running in offline mode because the Groq API key is not configured. 
+            
+**How Zark-AI Works:**
+
+🟢 **ONLINE MODE** (When API key is configured):
+- I can access advanced AI capabilities through Groq's llama3-70b-8192 model
+- I can provide detailed, contextual responses
+- I can analyze and understand website content you add
+- I can answer complex questions with nuanced understanding
+
+🔴 **OFFLINE MODE** (Current state):
+- Basic responses only
+- Limited to simple pattern matching
+- Cannot generate intelligent responses
+- Cannot properly analyze website content
+
+**To Enable Online Mode:**
+1. Get a Groq API key from https://groq.com/
+2. Add it to your environment variables as GROQ_API_KEY
+3. Restart the backend service
+
+**Current Query**: I cannot properly answer your question about: "{query}" in offline mode."""
         
         # Check if user is asking for more details
         is_detailed_request = any(phrase in query.lower() for phrase in [
@@ -319,21 +340,21 @@ async def generate_ai_response(context: str, query: str) -> str:
         ])
         
         if is_detailed_request:
-            prompt = f"""You are Zark, an AI assistant. Answer comprehensively using the provided context.
+            prompt = f"""You are Zark, an AI assistant with access to a knowledge database. Answer comprehensively using the provided context.
 
 {context}
 
-Provide a detailed, accurate response. If you use information from sources, acknowledge them naturally."""
+Provide a detailed, accurate response. Reference specific information from the sources when relevant. If the user is asking about specific website content, make sure to directly address their question using the available information."""
         else:
-            prompt = f"""You are Zark, an AI assistant. Answer concisely using the provided context.
+            prompt = f"""You are Zark, an AI assistant with access to a knowledge database. Answer helpfully using the provided context.
 
 {context}
 
-Provide a brief response in 5 lines or less. Be accurate and helpful."""
+Provide a clear, informative response. If you're using information from specific sources, acknowledge them naturally. Be accurate and helpful."""
 
         response = groq_client.chat.completions.create(
             messages=[
-                {"role": "system", "content": "You are Zark, a helpful AI assistant."},
+                {"role": "system", "content": "You are Zark, a helpful AI assistant with access to a knowledge database. Always try to answer questions using the provided context when relevant."},
                 {"role": "user", "content": prompt}
             ],
             model="llama3-70b-8192",
@@ -343,7 +364,26 @@ Provide a brief response in 5 lines or less. Be accurate and helpful."""
         
         return response.choices[0].message.content
     except Exception as e:
-        return f"Error generating AI response: {str(e)}"
+        error_message = str(e)
+        if "api" in error_message.lower() or "key" in error_message.lower():
+            return f"""🔴 **API ERROR**: There's an issue with the AI service connection. 
+
+**Error Details**: {error_message}
+
+**What this means:**
+- The Groq API key might be invalid or expired
+- There might be network connectivity issues
+- The API service might be temporarily unavailable
+
+**Troubleshooting:**
+1. Check if your Groq API key is valid
+2. Verify internet connectivity
+3. Try again in a few moments
+
+**Your Question**: "{query}"
+I cannot provide a proper AI-generated response due to the API issue above."""
+        else:
+            return f"⚠️ **Processing Error**: I encountered an error while processing your question: {error_message}. Please try rephrasing your question or try again later."
 
 async def ingest_from_url(url: str, depth: int = 1) -> int:
     """Ingest content from URL with specified depth"""
