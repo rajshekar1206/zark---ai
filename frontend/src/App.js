@@ -270,6 +270,10 @@ function App() {
                 </div>
               </div>
               <div className="header-actions">
+                <button onClick={getHelpInfo} className="help-button">
+                  <span>❓</span>
+                  Help
+                </button>
                 <button onClick={startNewConversation} className="new-chat-button">
                   <span>💬</span>
                   New Chat
