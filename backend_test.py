@@ -18,6 +18,9 @@ class ZarkAIAPITest(unittest.TestCase):
         data = response.json()
         print(f"✅ Health Check Response: {data}")
         self.assertIn('status', data)
+        self.assertEqual(data['status'], 'healthy', "Health status should be 'healthy'")
+        self.assertEqual(data['mongodb'], 'connected', "MongoDB should be connected")
+        self.assertEqual(data['groq'], 'configured', "Groq API should be configured")
         
     def test_02_chat_endpoint(self):
         """Test the chat endpoint with a simple query"""
