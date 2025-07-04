@@ -533,7 +533,7 @@ body {
 }
 
 .send-button {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
   border: none;
   padding: 12px;
@@ -546,12 +546,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 .send-button:hover:not(:disabled) {
   transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.6);
 }
 
 .send-button:disabled {
