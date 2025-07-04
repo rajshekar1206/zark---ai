@@ -360,7 +360,9 @@ function App() {
               {isLoading && (
                 <div className="message bot">
                   <div className="message-avatar">
-                    <div className="bot-avatar-small">Z</div>
+                    <div className="bot-avatar-small">
+                      <ZarkRobot size="small" />
+                    </div>
                   </div>
                   <div className="message-content">
                     <div className="typing-indicator">
