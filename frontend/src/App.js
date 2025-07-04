@@ -3,6 +3,27 @@ import './App.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
+// Zark Robot Icon Component
+const ZarkRobot = ({ size = 'medium' }) => {
+  return (
+    <div className={`zark-robot zark-robot-${size}`}>
+      <div className="robot-head">
+        <div className="robot-antennas">
+          <div className="robot-antenna"></div>
+          <div className="robot-antenna"></div>
+        </div>
+        <div className="robot-visor">
+          <div className="robot-eyes">
+            <div className="robot-eye"></div>
+            <div className="robot-eye"></div>
+          </div>
+        </div>
+      </div>
+      <div className="robot-body"></div>
+    </div>
+  );
+};
+
 function App() {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
