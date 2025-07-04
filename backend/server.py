@@ -142,18 +142,60 @@ async def clear_knowledge():
 async def search_knowledge(query: str, limit: int = 5) -> List[Dict]:
     """Search knowledge base using text search and relevance scoring"""
     try:
-        # Simple text search - in production, use vector search
-        search_results = knowledge_collection.find(
-            {"$or": [
-                {"title": {"$regex": query, "$options": "i"}},
-                {"content": {"$regex": query, "$options": "i"}},
-                {"summary": {"$regex": query, "$options": "i"}},
-                {"tags": {"$in": [query.lower()]}}
-            ]},
-            {"_id": 0}
-        ).limit(limit)
+        # Get total count first
+        total_count = knowledge_collection.count_documents({})
+        print(f"Total knowledge entries: {total_count}")
         
-        return list(search_results)
+        # Split query into words for better matching
+        query_words = query.lower().split()
+        
+        # Create search conditions
+        search_conditions = []
+        
+        # Add regex search for each word
+        for word in query_words:
+            if len(word) > 2:  # Only search for words longer than 2 characters
+                search_conditions.extend([
+                    {"title": {"$regex": word, "$options": "i"}},
+                    {"content": {"$regex": word, "$options": "i"}},
+                    {"summary": {"$regex": word, "$options": "i"}},
+                    {"tags": {"$in": [word]}}
+                ])
+        
+        # Add original query search
+        search_conditions.extend([
+            {"title": {"$regex": query, "$options": "i"}},
+            {"content": {"$regex": query, "$options": "i"}},
+            {"summary": {"$regex": query, "$options": "i"}},
+            {"tags": {"$in": [query.lower()]}}
+        ])
+        
+        # If no specific matches, return recent entries
+        if not search_conditions:
+            search_results = knowledge_collection.find(
+                {},
+                {"_id": 0}
+            ).sort("ingested_at", -1).limit(limit)
+        else:
+            search_results = knowledge_collection.find(
+                {"$or": search_conditions},
+                {"_id": 0}
+            ).limit(limit)
+        
+        results = list(search_results)
+        print(f"Search for '{query}' returned {len(results)} results")
+        
+        # If no results from query, return some recent entries
+        if not results and total_count > 0:
+            print("No specific matches found, returning recent entries")
+            search_results = knowledge_collection.find(
+                {},
+                {"_id": 0}
+            ).sort("ingested_at", -1).limit(limit)
+            results = list(search_results)
+            print(f"Returning {len(results)} recent entries")
+        
+        return results
     except Exception as e:
         print(f"Search error: {e}")
         return []
