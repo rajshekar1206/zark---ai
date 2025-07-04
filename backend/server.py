@@ -46,6 +46,7 @@ if GROQ_API_KEY:
 class QueryRequest(BaseModel):
     query: str
     conversation_id: Optional[str] = None
+    show_sources: bool = False  # New field to control source display
 
 class UrlIngestRequest(BaseModel):
     url: str
