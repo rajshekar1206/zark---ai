@@ -358,12 +358,16 @@ body {
   }
 }
 
-/* Tabs */
+/* Tabs - Make them sticky */
 .tabs-container {
   display: flex;
   padding: 20px 20px 0;
-  background: rgba(59, 130, 246, 0.05);
-  border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+  background: rgba(12, 20, 69, 0.9);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(10px);
 }
 
 .tab {
