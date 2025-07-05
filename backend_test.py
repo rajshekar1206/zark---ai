@@ -2,6 +2,8 @@ import requests
 import unittest
 import json
 import time
+import os
+from pprint import pprint
 
 class ZarkAIAPITest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
@@ -10,6 +12,7 @@ class ZarkAIAPITest(unittest.TestCase):
         self.base_url = "https://c3ee10d9-6602-453e-aae2-f74f4bf9f6b8.preview.emergentagent.com"
         self.headers = {'Content-Type': 'application/json'}
         self.test_url = "https://en.wikipedia.org/wiki/Artificial_intelligence"
+        self.non_wiki_url = "https://www.groq.com/blog/llama3"
         
     def test_01_health_check(self):
         """Test the health check endpoint"""
