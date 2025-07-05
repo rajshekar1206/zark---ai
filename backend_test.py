@@ -452,24 +452,50 @@ class ZarkAIAPITest(unittest.TestCase):
     def run_all_tests(self):
         """Run all tests in sequence"""
         try:
+            print("\n==== TESTING ZARK AI CHATBOT BACKEND ====")
+            print("Testing with Groq API key: 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")
+            
+            # API and Health Tests
             self.test_01_health_check()
+            self.test_01a_api_key_configuration()
+            
+            # Basic Chat Functionality
             conversation_id = self.test_02_chat_endpoint()
+            
+            # URL Ingestion Tests
             self.test_03_insert_content()
+            self.test_03a_non_wiki_url_ingestion()
             self.test_04_get_knowledge()
+            
+            # Knowledge-based Chat Tests
             self.test_05_chat_with_knowledge()
             self.test_06_detailed_response()
             
-            # Run the new sources functionality tests
+            # Sources Functionality Tests
             self.test_09_sources_functionality_off()
             self.test_10_sources_functionality_on()
             self.test_11_explicit_source_request()
             self.test_12_specific_ai_questions()
             
-            # Run these tests last as they modify the knowledge base
+            # Advanced Functionality Tests
+            self.test_13_unknown_knowledge_handling()
+            self.test_14_conversation_management()
+            
+            # Cleanup Tests
             self.test_07_clear_knowledge()
             self.test_08_error_handling()
             
             print("\n✅ All API tests completed successfully!")
+            print("\n==== SUMMARY ====")
+            print("✅ API Key Configuration: The new Groq API key is working properly")
+            print("✅ Chat Functionality: Basic chat responses are working correctly")
+            print("✅ URL Ingestion: Successfully ingested content from both Wikipedia and non-Wikipedia sites")
+            print("✅ Content-Based Questions: Bot can answer questions about ingested content")
+            print("✅ Unknown Knowledge: Bot appropriately indicates when it doesn't know something")
+            print("✅ Sources Toggle: Sources are correctly handled with both show_sources=true and show_sources=false")
+            print("✅ Conversation Management: Conversation IDs are properly managed")
+            print("✅ Health and Status: All health check endpoints return proper status")
+            
             return True
         except Exception as e:
             print(f"\n❌ Test failed: {str(e)}")
