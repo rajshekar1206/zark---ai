@@ -84,6 +84,35 @@ class ZarkAIAPITest(unittest.TestCase):
         print("Waiting for insertion to complete...")
         time.sleep(2)
         
+    def test_03a_non_wiki_url_ingestion(self):
+        """Test ingestion of non-Wikipedia URL"""
+        print("\n🔍 Testing Non-Wikipedia URL Ingestion...")
+        payload = {
+            "url": self.non_wiki_url,
+            "depth": 1
+        }
+        response = requests.post(
+            f"{self.base_url}/api/ingest", 
+            headers=self.headers,
+            json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        print(f"✅ Non-Wiki URL Insertion Response: {data}")
+        self.assertIn('message', data)
+        self.assertIn('url', data)
+        self.assertEqual(data['url'], self.non_wiki_url)
+        
+        # Give some time for insertion to complete
+        print("Waiting for insertion to complete...")
+        time.sleep(3)
+        
+        # Verify content was added
+        response = requests.get(f"{self.base_url}/api/knowledge")
+        data = response.json()
+        print(f"✅ Knowledge Base now contains {data['total']} entries")
+        self.assertGreater(data['total'], 0, "Knowledge base should contain entries after ingestion")
+        
     def test_04_get_knowledge(self):
         """Test retrieving knowledge entries"""
         print("\n🔍 Testing Knowledge Retrieval...")
