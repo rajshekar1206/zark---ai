@@ -116,6 +116,42 @@ backend:
       - working: true
         agent: "main"
         comment: "Enhanced search_knowledge function with better word-based searching, improved context preparation for cases with available knowledge, added detailed logging for ingestion tracking, and enhanced knowledge endpoint to show entry counts. Content ingestion now works properly with proper knowledge retrieval."
+      - working: true
+        agent: "testing"
+        comment: "Verified that URL content ingestion is working correctly. The backend can successfully ingest content from Wikipedia URLs and answer questions about the content. The knowledge retrieval system works properly with the new Groq API key. Non-Wikipedia sites may have mixed results but the backend handles them gracefully."
+  - task: "API Key Configuration"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Verified that the new Groq API key (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) is working properly. The bot shows as online and all API endpoints are functioning correctly. The health check endpoint returns 'healthy' status and the status endpoint shows 'api_configured' as true."
+  - task: "Sources Toggle Functionality"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Verified that the sources toggle functionality is working correctly in the backend. When show_sources=false is passed to the /api/chat endpoint, the API returns an empty sources array. When show_sources=true is passed, the API correctly returns sources in the response when relevant knowledge is available."
+  - task: "Conversation Management"
+    implemented: true
+    working: false
+    file: "backend/server.py"
+    stuck_count: 1
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "Found an issue with conversation management. The bot doesn't consistently remember context from previous messages in the same conversation. When testing with a simple conversation flow (introducing a name and then asking about it), the bot failed to remember the name from the previous message despite using the same conversation_id."
 
 frontend:
   - task: "Create night sky UI matching the provided image"
