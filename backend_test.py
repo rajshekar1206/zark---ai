@@ -347,6 +347,80 @@ class ZarkAIAPITest(unittest.TestCase):
             # Print first 100 chars of response for verification
             print(f"Response preview: {data['response'][:100]}...")
             
+    def test_13_unknown_knowledge_handling(self):
+        """Test that the bot appropriately handles unknown topics"""
+        print("\n🔍 Testing Unknown Knowledge Handling...")
+        
+        # Clear knowledge base first to ensure clean test
+        response = requests.delete(f"{self.base_url}/api/knowledge")
+        self.assertEqual(response.status_code, 200)
+        
+        # Verify knowledge is cleared
+        response = requests.get(f"{self.base_url}/api/knowledge")
+        data = response.json()
+        print(f"✅ Knowledge Base cleared, now contains {data['total']} entries")
+        
+        # Test with a very specific question that shouldn't be in general knowledge
+        payload = {
+            "query": "What is the exact height of the imaginary building called Zarkopolis Tower on planet Xylophone?",
+            "conversation_id": None
+        }
+        response = requests.post(
+            f"{self.base_url}/api/chat", 
+            headers=self.headers,
+            json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        print(f"✅ Response length: {len(data['response'])} characters")
+        
+        # Check if the response indicates lack of knowledge
+        unknown_phrases = ["don't know", "don't have", "no information", "not familiar", "cannot provide", "fictional", "imaginary"]
+        has_unknown_phrase = any(phrase in data['response'].lower() for phrase in unknown_phrases)
+        
+        self.assertTrue(has_unknown_phrase, "Response should indicate lack of knowledge for unknown topics")
+        print(f"Response preview: {data['response'][:200]}...")
+        
+    def test_14_conversation_management(self):
+        """Test that conversation IDs are properly managed"""
+        print("\n🔍 Testing Conversation Management...")
+        
+        # First message in conversation
+        payload = {
+            "query": "Hello, my name is Alex",
+            "conversation_id": None
+        }
+        response = requests.post(
+            f"{self.base_url}/api/chat", 
+            headers=self.headers,
+            json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        conversation_id = data['conversation_id']
+        print(f"✅ First message sent, conversation_id: {conversation_id}")
+        
+        # Second message in same conversation
+        payload = {
+            "query": "What's my name?",
+            "conversation_id": conversation_id
+        }
+        response = requests.post(
+            f"{self.base_url}/api/chat", 
+            headers=self.headers,
+            json=payload
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        print(f"✅ Second message sent, response: {data['response'][:100]}...")
+        
+        # Check if the response remembers the name
+        name_remembered = "alex" in data['response'].lower()
+        self.assertTrue(name_remembered, "Bot should remember the name from previous message in conversation")
+        
+        # Verify conversation ID is maintained
+        self.assertEqual(data['conversation_id'], conversation_id, "Conversation ID should be maintained")
+        
     def _ensure_content_exists(self):
         """Helper method to ensure content exists in the knowledge base"""
         # Check if we have content
